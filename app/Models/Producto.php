@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
-   use HasFactory;
+
 
     protected $fillable = [
+        'cliente_id',
         'nombre',
         'marca',
         'modelo',
@@ -22,10 +23,9 @@ class Producto extends Model
         'stock',
     ];
 
-    public function cotizaciones()
+    // Relación con cliente (User)
+    public function cliente()
     {
-        return $this->belongsToMany(Cotizacion::class, 'cotizacion_productos')
-                    ->withPivot('cantidad', 'subtotal')
-                    ->withTimestamps();
+        return $this->belongsTo(User::class, 'cliente_id');
     }
 }

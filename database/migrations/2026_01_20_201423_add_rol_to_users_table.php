@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('rol')->default('cliente'); // por defecto todos son clientes
+      $table->string('role')->default('cliente'); // nombre estándar
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('rol'); // elimina la columna al hacer rollback
+            $table->dropColumn('role'); // elimina la columna al hacer rollback
         });
     }
 };
