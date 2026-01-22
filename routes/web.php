@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\CotizacionController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\ProfileController;
@@ -62,6 +63,8 @@ Route::prefix('admin')->as('admin.')->group(function () {
 
     Route::delete('cotizaciones/{cotizacion}/items/{item}/opciones/{op}', [CotizacionController::class, 'eliminarOpcionItem'])
         ->name('cotizaciones.items.opciones.destroy');
+
+        Route::resource('clientes', ClienteController::class);
 });
 
 

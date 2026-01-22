@@ -60,6 +60,22 @@
 
                 {{-- (Futuro) Clientes --}}
 
+{{-- Clientes --}}
+<div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition">
+    <div>
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            Clientes
+        </h4>
+        <p class="text-gray-600 dark:text-gray-300 mb-4">
+            Crea y gestiona clientes (persona o empresa) para asociarlos a cotizaciones.
+        </p>
+    </div>
+
+    <a href="{{ route('admin.clientes.index') }}"
+       class="mt-auto inline-block bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded text-center">
+        Ver Clientes
+    </a>
+</div>
 
 
 

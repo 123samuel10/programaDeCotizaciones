@@ -12,6 +12,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'empresa',
         'email',
         'password',
         'role',
@@ -29,4 +30,11 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function cotizaciones()
+{
+    return $this->hasMany(\App\Models\Cotizacion::class, 'user_id');
+}
+
+
 }
