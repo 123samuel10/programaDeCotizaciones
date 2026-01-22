@@ -9,6 +9,7 @@ use App\Models\Producto;
 use App\Models\Opcion;
 use App\Models\OpcionPrecio;
 use App\Models\Cotizacion; // ✅ para validar si se puede eliminar
+use App\Models\CotizacionItem;
 
 class ProductoController extends Controller
 {
@@ -133,20 +134,19 @@ class ProductoController extends Controller
         return back()->with('success', 'Predeterminada actualizada.');
     }
 
-    // ✅ ELIMINAR PRODUCTO
-    public function destroy(Producto $producto)
-    {
-        // Evita borrar si el producto ya tiene cotizaciones
-        $tieneCotizaciones = Cotizacion::where('producto_id', $producto->id)->exists();
+ public function destroy(Producto $producto)
+{
+    // ✅ Evita borrar si ya está usado en alguna cotización (líneas)
+    $tieneItems = CotizacionItem::where('producto_id', $producto->id)->exists();
 
-        if ($tieneCotizaciones) {
-            return back()->with('error', 'No puedes eliminar este producto porque ya tiene cotizaciones asociadas.');
-        }
-
-        $producto->delete();
-
-        return redirect()
-            ->route('admin.productos.index')
-            ->with('success', 'Producto eliminado correctamente.');
+    if ($tieneItems) {
+        return back()->with('error', 'No puedes eliminar este producto porque ya está usado en cotizaciones.');
     }
+
+    $producto->delete();
+
+    return redirect()
+        ->route('admin.productos.index')
+        ->with('success', 'Producto eliminado correctamente.');
+}
 }

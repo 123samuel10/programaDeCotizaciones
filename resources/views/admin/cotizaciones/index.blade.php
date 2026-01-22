@@ -1,4 +1,3 @@
-{{-- resources/views/admin/cotizaciones/index.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
@@ -16,20 +15,6 @@
     <div class="py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            @if(session('success'))
-                <div class="mb-6 p-4 rounded-xl bg-green-50 text-green-800 border border-green-200
-                            dark:bg-green-900/30 dark:text-green-100 dark:border-green-900">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200
-                            dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
-                    {{ session('error') }}
-                </div>
-            @endif
-
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
@@ -37,7 +22,7 @@
                             <tr class="text-left text-gray-600 dark:text-gray-300">
                                 <th class="py-2">#</th>
                                 <th class="py-2">Cliente</th>
-                                <th class="py-2">Producto</th>
+                                <th class="py-2 text-center">Líneas</th>
                                 <th class="py-2 text-right">Total Venta</th>
                                 <th class="py-2 text-right">Total Costo</th>
                                 <th class="py-2 text-right">Acción</th>
@@ -60,13 +45,8 @@
                                         </div>
                                     </td>
 
-                                    <td class="py-3">
-                                        <div class="text-gray-900 dark:text-gray-100 font-semibold">
-                                            {{ $c->producto->nombre_producto ?? '—' }}
-                                        </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $c->producto->marca ?? '' }} {{ $c->producto->modelo ?? '' }}
-                                        </div>
+                                    <td class="py-3 text-center">
+                                        {{ $c->items()->count() }}
                                     </td>
 
                                     <td class="py-3 text-right text-gray-900 dark:text-gray-100">
@@ -87,8 +67,7 @@
                             @empty
                                 <tr class="border-t dark:border-gray-700">
                                     <td colspan="6" class="py-8 text-center text-gray-600 dark:text-gray-300">
-                                        No hay cotizaciones aún. Crea la primera con el botón
-                                        <b>+ Nueva cotización</b>.
+                                        No hay cotizaciones aún.
                                     </td>
                                 </tr>
                             @endforelse

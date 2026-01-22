@@ -14,7 +14,9 @@ return new class extends Migration
    Schema::create('cotizaciones', function (Blueprint $table) {
     $table->id();
     $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->foreignId('producto_id')->constrained()->cascadeOnDelete();
+
+    $table->foreignId('producto_id')->nullable()->constrained()->nullOnDelete();
+
 
     $table->decimal('total_venta', 12, 2)->default(0);
     $table->decimal('total_costo', 12, 2)->default(0);

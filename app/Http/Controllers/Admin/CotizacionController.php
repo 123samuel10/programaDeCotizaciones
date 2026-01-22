@@ -10,187 +10,209 @@ use App\Models\Cotizacion;
 use App\Models\Producto;
 use App\Models\User;
 use App\Models\Opcion;
-use App\Models\CotizacionOpcion;
+
+use App\Models\CotizacionItem;
+use App\Models\CotizacionItemOpcion;
 
 class CotizacionController extends Controller
 {
     // LISTADO
     public function index()
     {
-        $cotizaciones = Cotizacion::with(['producto', 'usuario'])
-            ->withSum('items as adiciones_venta', 'subtotal_venta')
-            ->withSum('items as adiciones_costo', 'subtotal_costo')
+        $cotizaciones = Cotizacion::with(['usuario'])
             ->latest()
             ->get();
 
-        // 👇 NO recalculamos guardando en BD aquí. Solo mostramos.
+        // Mostrar totales correctos (sin “copiar” opciones)
+        foreach ($cotizaciones as $c) {
+            $this->recalcularTotales($c);
+            $c->refresh();
+        }
+
         return view('admin.cotizaciones.index', compact('cotizaciones'));
     }
 
     // FORM CREAR
     public function create()
     {
-        $clientes = User::where('role', 'cliente')->orderBy('name')->get();
-        $productos = Producto::latest()->get();
-
-        return view('admin.cotizaciones.create', compact('clientes', 'productos'));
+        $clientes  = User::where('role', 'cliente')->orderBy('name')->get();
+        return view('admin.cotizaciones.create', compact('clientes'));
     }
 
-    // GUARDAR COTIZACIÓN (COPIA OPCIONES DEL PRODUCTO)
+    // CREAR COTIZACIÓN VACÍA (sin producto fijo)
     public function store(Request $request)
     {
         $request->validate([
-            'user_id'     => 'required|exists:users,id',
-            'producto_id' => 'required|exists:productos,id',
+            'user_id' => 'required|exists:users,id',
         ]);
 
-        $cotizacion = DB::transaction(function () use ($request) {
-
-            $producto = Producto::with([
-                'opciones' => fn ($q) => $q->orderBy('orden')->orderBy('nombre'),
-                'opciones.precios' => fn ($q) => $q->latest(),
-            ])->findOrFail((int) $request->producto_id);
-
-            // 1) Crear cotización
-            $cotizacion = Cotizacion::create([
-                'user_id'     => (int) $request->user_id,
-                'producto_id' => (int) $producto->id,
-                'total_venta' => 0,
-                'total_costo' => 0,
-            ]);
-
-            // 2) Copiar opciones con precio
-            foreach ($producto->opciones as $opcion) {
-                $precio = $opcion->precios()->latest()->first();
-                if (!$precio) {
-                    continue;
-                }
-
-                $ventaUnit = (float) $precio->precio_venta;
-                $costoUnit = (float) $precio->precio_costo;
-
-                CotizacionOpcion::create([
-                    'cotizacion_id'  => $cotizacion->id,
-                    'opcion_id'      => $opcion->id,
-                    'cantidad'       => 1,
-                    'subtotal_venta' => $ventaUnit,
-                    'subtotal_costo' => $costoUnit,
-                ]);
-            }
-
-            // 3) Guardar totales ya calculados
-            $this->recalcularTotales($cotizacion);
-
-            return $cotizacion;
-        });
+        $cotizacion = Cotizacion::create([
+            'user_id'     => (int) $request->user_id,
+            'total_venta' => 0,
+            'total_costo' => 0,
+        ]);
 
         return redirect()
             ->route('admin.cotizaciones.edit', $cotizacion->id)
-            ->with('success', 'Cotización creada correctamente.');
+            ->with('success', 'Cotización creada. Ahora agrega productos y adiciones por línea.');
     }
 
+    // EDITAR (agregar ítems y adiciones por ítem)
     public function edit(Cotizacion $cotizacion)
-{
-    // Fuerza carga real desde BD con relaciones
-    $cotizacion = Cotizacion::with(['producto', 'items.opcion', 'usuario'])
-        ->findOrFail($cotizacion->id);
-
-    $this->recalcularTotales($cotizacion);
-    $cotizacion->refresh();
-
-    $opcionesDisponibles = $cotizacion->producto->opciones()
-        ->orderBy('categoria')
-        ->orderBy('orden')
-        ->orderBy('nombre')
-        ->get();
-
-    return view('admin.cotizaciones.edit', compact('cotizacion', 'opcionesDisponibles'));
-}
-
-    // AGREGAR ADICIÓN
-    public function agregarOpcion(Request $request, Cotizacion $cotizacion)
     {
+        $cotizacion = Cotizacion::with([
+            'usuario',
+            'items.producto',
+            'items.opciones.opcion',
+        ])->findOrFail($cotizacion->id);
+
+        $this->recalcularTotales($cotizacion);
+        $cotizacion->refresh();
+
+        $productos = Producto::latest()->get();
+
+        return view('admin.cotizaciones.edit', compact('cotizacion', 'productos'));
+    }
+
+    // ✅ AGREGAR ITEM (producto + cantidad) a la cotización
+    public function agregarItem(Request $request, Cotizacion $cotizacion)
+    {
+        $request->validate([
+            'producto_id' => 'required|exists:productos,id',
+            'cantidad'    => 'required|integer|min:1|max:999',
+        ]);
+
+        $producto = Producto::findOrFail((int)$request->producto_id);
+
+        CotizacionItem::create([
+            'cotizacion_id'     => $cotizacion->id,
+            'producto_id'       => $producto->id,
+            'cantidad'          => (int)$request->cantidad,
+            'precio_base_venta' => (float)$producto->precio_base_venta,
+            'precio_base_costo' => (float)$producto->precio_base_costo,
+        ]);
+
+        $this->recalcularTotales($cotizacion);
+
+        return back()->with('success', 'Producto agregado a la cotización.');
+    }
+
+    // ✅ ACTUALIZAR CANTIDAD de una línea
+    public function actualizarItem(Request $request, Cotizacion $cotizacion, CotizacionItem $item)
+    {
+        if ($item->cotizacion_id !== $cotizacion->id) abort(403);
+
+        $request->validate([
+            'cantidad' => 'required|integer|min:1|max:999',
+        ]);
+
+        $item->update([
+            'cantidad' => (int)$request->cantidad,
+        ]);
+
+        $this->recalcularTotales($cotizacion);
+
+        return back()->with('success', 'Cantidad actualizada.');
+    }
+
+    // ✅ ELIMINAR ITEM (línea completa)
+    public function eliminarItem(Cotizacion $cotizacion, CotizacionItem $item)
+    {
+        if ($item->cotizacion_id !== $cotizacion->id) abort(403);
+
+        $item->delete();
+        $this->recalcularTotales($cotizacion);
+
+        return back()->with('success', 'Línea eliminada.');
+    }
+
+    // ✅ AGREGAR ADICIÓN A UN ITEM ESPECÍFICO
+    public function agregarOpcionItem(Request $request, Cotizacion $cotizacion, CotizacionItem $item)
+    {
+        if ($item->cotizacion_id !== $cotizacion->id) abort(403);
+
         $request->validate([
             'opcion_id' => 'required|exists:opciones,id',
             'cantidad'  => 'required|integer|min:1|max:99',
         ]);
 
-        $cotizacion->load('producto');
-
-        if (!$cotizacion->producto) {
-            return back()->with('error', 'Cotización dañada: no tiene producto.');
-        }
-
-        // Seguridad: opción debe pertenecer al producto
-        $opcion = Opcion::where('id', (int) $request->opcion_id)
-            ->where('producto_id', $cotizacion->producto_id)
+        // seguridad: opción debe pertenecer al producto de ese item
+        $opcion = Opcion::where('id', (int)$request->opcion_id)
+            ->where('producto_id', $item->producto_id)
             ->firstOrFail();
 
         $precio = $opcion->precios()->latest()->first();
-
         if (!$precio) {
-            return back()->with('error', 'Esa opción no tiene precio asignado. Ve a Productos y ponle precio.');
+            return back()->with('error', 'Esa opción no tiene precio asignado.');
         }
 
-        $ventaUnit = (float) $precio->precio_venta;
-        $costoUnit = (float) $precio->precio_costo;
+        $ventaUnit = (float)$precio->precio_venta;
+        $costoUnit = (float)$precio->precio_costo;
 
-        $cantidadNueva = (int) $request->cantidad;
+        $cantidadNueva = (int)$request->cantidad;
 
-        $item = CotizacionOpcion::where('cotizacion_id', $cotizacion->id)
+        $existente = CotizacionItemOpcion::where('cotizacionitem_id', $item->id)
             ->where('opcion_id', $opcion->id)
             ->first();
 
-        if ($item) {
-            $item->cantidad += $cantidadNueva;
+        if ($existente) {
+            $existente->cantidad += $cantidadNueva;
+            $existente->subtotal_venta = $existente->cantidad * $ventaUnit;
+            $existente->subtotal_costo = $existente->cantidad * $costoUnit;
+            $existente->precio_venta   = $ventaUnit;
+            $existente->precio_costo   = $costoUnit;
+            $existente->save();
         } else {
-            $item = new CotizacionOpcion([
-                'cotizacion_id' => $cotizacion->id,
-                'opcion_id'     => $opcion->id,
-                'cantidad'      => $cantidadNueva,
+            CotizacionItemOpcion::create([
+                'cotizacionitem_id' => $item->id,
+                'opcion_id'         => $opcion->id,
+                'cantidad'          => $cantidadNueva,
+                'precio_venta'      => $ventaUnit,
+                'precio_costo'      => $costoUnit,
+                'subtotal_venta'    => $cantidadNueva * $ventaUnit,
+                'subtotal_costo'    => $cantidadNueva * $costoUnit,
             ]);
         }
 
-        $item->subtotal_venta = $item->cantidad * $ventaUnit;
-        $item->subtotal_costo = $item->cantidad * $costoUnit;
-        $item->save();
-
         $this->recalcularTotales($cotizacion);
 
-        return back()->with('success', 'Adición agregada a la cotización.');
+        return back()->with('success', 'Adición agregada a esa línea (solo a ese producto).');
     }
 
-    // ELIMINAR ITEM
-    public function eliminarItem(Cotizacion $cotizacion, CotizacionOpcion $item)
+    // ✅ ELIMINAR ADICIÓN DE UN ITEM
+    public function eliminarOpcionItem(Cotizacion $cotizacion, CotizacionItem $item, CotizacionItemOpcion $op)
     {
-        if ($item->cotizacion_id !== $cotizacion->id) {
-            abort(403);
-        }
+        if ($item->cotizacion_id !== $cotizacion->id) abort(403);
+        if ($op->cotizacionitem_id !== $item->id) abort(403);
 
-        $item->delete();
+        $op->delete();
         $this->recalcularTotales($cotizacion);
 
         return back()->with('success', 'Adición eliminada.');
     }
 
-    // RECALCULAR TOTALES (BASE + ITEMS)
+    // ✅ RECALCULAR TOTALES (SUMA TODAS LAS LÍNEAS + SUS ADICIONES)
     private function recalcularTotales(Cotizacion $cotizacion): void
     {
-        $cotizacion->load(['items', 'producto']);
+        $cotizacion->load(['items.opciones']);
 
-        if (!$cotizacion->producto) {
-            return;
+        $totalVenta = 0;
+        $totalCosto = 0;
+
+        foreach ($cotizacion->items as $it) {
+            $baseVenta = (float)$it->precio_base_venta * (int)$it->cantidad;
+            $baseCosto = (float)$it->precio_base_costo * (int)$it->cantidad;
+
+            $adVenta = (float)$it->opciones->sum('subtotal_venta');
+            $adCosto = (float)$it->opciones->sum('subtotal_costo');
+
+            $totalVenta += ($baseVenta + $adVenta);
+            $totalCosto += ($baseCosto + $adCosto);
         }
 
-        $baseVenta = (float) $cotizacion->producto->precio_base_venta;
-        $baseCosto = (float) $cotizacion->producto->precio_base_costo;
-
-        $adVenta = (float) $cotizacion->items->sum('subtotal_venta');
-        $adCosto = (float) $cotizacion->items->sum('subtotal_costo');
-
         $cotizacion->update([
-            'total_venta' => $baseVenta + $adVenta,
-            'total_costo' => $baseCosto + $adCosto,
+            'total_venta' => $totalVenta,
+            'total_costo' => $totalCosto,
         ]);
     }
 }

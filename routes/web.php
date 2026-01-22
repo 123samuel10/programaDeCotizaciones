@@ -37,19 +37,31 @@ Route::resourceParameters([
 
 Route::prefix('admin')->as('admin.')->group(function () {
 
+    // Recursos principales
     Route::resource('productos', ProductoController::class);
+      // ✅ ESTA ES LA QUE TE FALTA
+    Route::post('productos/{producto}/opciones', [ProductoController::class, 'agregarOpcion'])
+        ->name('productos.opciones.store');
 
-    Route::resource('cotizaciones', CotizacionController::class)
-        ->only(['index', 'create', 'store', 'edit']);
+    Route::resource('cotizaciones', CotizacionController::class);
+    Route::resource('cotizaciones', CotizacionController::class);
 
-    Route::post('cotizaciones/{cotizacion}/opciones', [CotizacionController::class, 'agregarOpcion'])
-        ->name('cotizaciones.opciones.store');
+    // ✅ ITEMS (líneas de cotización)
+    Route::post('cotizaciones/{cotizacion}/items', [CotizacionController::class, 'agregarItem'])
+        ->name('cotizaciones.items.store');
+
+    Route::patch('cotizaciones/{cotizacion}/items/{item}', [CotizacionController::class, 'actualizarItem'])
+        ->name('cotizaciones.items.update');
 
     Route::delete('cotizaciones/{cotizacion}/items/{item}', [CotizacionController::class, 'eliminarItem'])
         ->name('cotizaciones.items.destroy');
-        Route::post('productos/{producto}/opciones', [ProductoController::class, 'agregarOpcion'])
-    ->name('productos.opciones.store');
 
+    // ✅ ADICIONES POR ITEM (no por cotización)
+    Route::post('cotizaciones/{cotizacion}/items/{item}/opciones', [CotizacionController::class, 'agregarOpcionItem'])
+        ->name('cotizaciones.items.opciones.store');
+
+    Route::delete('cotizaciones/{cotizacion}/items/{item}/opciones/{op}', [CotizacionController::class, 'eliminarOpcionItem'])
+        ->name('cotizaciones.items.opciones.destroy');
 });
 
 
