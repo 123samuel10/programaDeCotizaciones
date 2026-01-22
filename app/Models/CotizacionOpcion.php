@@ -6,12 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 class CotizacionOpcion extends Model
 {
-      use HasFactory;
+  use HasFactory;
+
+    protected $table = 'cotizacion_opciones';
 
     protected $fillable = [
         'cotizacion_id',
         'opcion_id',
-        'precio'
+        'cantidad',
+        'subtotal_venta',
+        'subtotal_costo',
     ];
 
     public function cotizacion()

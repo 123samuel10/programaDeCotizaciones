@@ -7,21 +7,27 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Cotizacion extends Model
 {
-     use HasFactory;
+    protected $table = 'cotizaciones';
 
     protected $fillable = [
+        'user_id',
         'producto_id',
-        'cliente_id',
-        'total'
+        'total_venta',
+        'total_costo',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class);
+        return $this->belongsTo(Producto::class, 'producto_id');
     }
 
-    public function opciones()
+    public function items()
     {
-        return $this->hasMany(CotizacionOpcion::class);
+        return $this->hasMany(CotizacionOpcion::class, 'cotizacion_id');
     }
 }

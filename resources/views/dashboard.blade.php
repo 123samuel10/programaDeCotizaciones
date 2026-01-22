@@ -15,23 +15,25 @@
                 </h3>
                 <p class="text-gray-700 dark:text-gray-300">
                     @if(Auth::user()->role === 'admin')
-                        Desde aquí puedes gestionar tus productos, revisar estadísticas y administrar tu tienda de manera segura.
+                        Desde aquí puedes gestionar productos y cotizaciones del sistema.
                     @else
-                        Bienvenido a tu panel, aquí puedes ver tus compras y tu información personal.
+                        Bienvenido a tu panel, aquí puedes ver tus cotizaciones.
                     @endif
                 </p>
             </div>
 
-            {{-- Panel de acciones rápidas solo para admin --}}
+            {{-- Panel admin --}}
             @if(Auth::user()->role === 'admin')
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                {{-- Card: Ver Productos --}}
-                <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition duration-200">
+                {{-- Productos --}}
+                <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition">
                     <div>
-                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Productos</h4>
+                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            Productos
+                        </h4>
                         <p class="text-gray-600 dark:text-gray-300 mb-4">
-                            Visualiza todos tus productos, edítalos o elimina los que ya no necesites.
+                            Define equipos base (EXWORKS) y sus adiciones disponibles.
                         </p>
                     </div>
                     <a href="{{ route('admin.productos.index') }}"
@@ -40,19 +42,35 @@
                     </a>
                 </div>
 
-                {{-- Card: Agregar Producto --}}
-                {{-- <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition duration-200">
+                {{-- Cotizaciones --}}
+                <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg p-6 flex flex-col justify-between hover:shadow-lg transition">
                     <div>
-                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Agregar Producto</h4>
+                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            Cotizaciones
+                        </h4>
                         <p class="text-gray-600 dark:text-gray-300 mb-4">
-                            Crea nuevos productos seleccionando sus atributos y detalles.
+                            Crea cotizaciones por cliente, agrega adiciones y calcula totales.
                         </p>
                     </div>
-                    <a href="{{ route('admin.productos.create') }}"
+                    <a href="{{ route('admin.cotizaciones.index') }}"
                        class="mt-auto inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded text-center">
-                        Agregar Producto
+                        Ver Cotizaciones
                     </a>
-                </div> --}}
+                </div>
+
+                {{-- (Futuro) Clientes --}}
+                {{--
+                <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg p-6 flex flex-col justify-between opacity-60">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                            Clientes
+                        </h4>
+                        <p class="text-gray-600 dark:text-gray-300 mb-4">
+                            Gestión de clientes (próximamente).
+                        </p>
+                    </div>
+                </div>
+                --}}
 
             </div>
             @endif

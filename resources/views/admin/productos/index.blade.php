@@ -21,6 +21,12 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 @forelse($productos as $producto)
                     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
@@ -42,10 +48,23 @@
                             </div>
                         </div>
 
-                        <a href="{{ route('admin.productos.edit', $producto) }}"
-                           class="mt-5 inline-flex w-full justify-center px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold">
-                            Abrir / Editar cotización
-                        </a>
+                        <div class="mt-5 flex gap-2">
+                            <a href="{{ route('admin.productos.edit', $producto) }}"
+                               class="inline-flex w-full justify-center px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold">
+                                Abrir
+                            </a>
+
+                            <form method="POST" action="{{ route('admin.productos.destroy', $producto) }}"
+                                  class="w-full"
+                                  onsubmit="return confirm('¿Seguro que deseas eliminar este producto? Esta acción no se puede deshacer.')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="w-full px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 @empty
                     <div class="col-span-full p-8 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200">
