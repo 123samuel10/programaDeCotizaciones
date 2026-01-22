@@ -59,18 +59,9 @@
                 </div>
 
                 {{-- (Futuro) Clientes --}}
-                {{--
-                <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg p-6 flex flex-col justify-between opacity-60">
-                    <div>
-                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                            Clientes
-                        </h4>
-                        <p class="text-gray-600 dark:text-gray-300 mb-4">
-                            Gestión de clientes (próximamente).
-                        </p>
-                    </div>
-                </div>
-                --}}
+
+
+
 
             </div>
             @endif

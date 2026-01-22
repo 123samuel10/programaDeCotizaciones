@@ -6,7 +6,7 @@
                     {{ $producto->nombre_producto }}
                 </h2>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Standard (EXWORKS) + Adiciones (como Excel) → Total
+                    Precio base del producto + Adiciones disponibles (se aplican en la cotización)
                 </p>
             </div>
 
@@ -18,14 +18,10 @@
     </x-slot>
 
     @php
-        $opVenta = $producto->opciones->sum(fn($o)=> $o->precios->first()->precio_venta ?? 0);
-        $opCosto = $producto->opciones->sum(fn($o)=> $o->precios->first()->precio_costo ?? 0);
-
+        // ✅ En PRODUCTOS: solo mostramos PRECIO BASE.
+        // Las adiciones NO se suman aquí porque se aplican por línea en la cotización.
         $baseVenta = (float) $producto->precio_base_venta;
         $baseCosto = (float) $producto->precio_base_costo;
-
-        $totalVenta = $baseVenta + $opVenta;
-        $totalCosto = $baseCosto + $opCosto;
 
         // ✅ Lista PLANA para el SELECT (sin categorías)
         $opcionesSelector = [
@@ -52,7 +48,13 @@
                 </div>
             @endif
 
-            {{-- STANDARD --}}
+            @if(session('error'))
+                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            {{-- STANDARD (SOLO PRECIO BASE) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm mb-6">
                 <div class="flex justify-between items-start gap-6">
                     <div>
@@ -67,25 +69,43 @@
                             P: <b>{{ $producto->profundidad ?? '—' }}</b> ·
                             A: <b>{{ $producto->altura ?? '—' }}</b>
                         </p>
+
+                        <div class="mt-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900">
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
+                                Las <b>adiciones</b> no modifican el precio del producto.
+                                Se aplican únicamente cuando este producto se agrega a una <b>cotización</b>.
+                            </p>
+                        </div>
                     </div>
 
                     <div class="text-right">
-                        <p class="text-sm">Venta: <b>${{ number_format($baseVenta, 2, ',', '.') }}</b></p>
-                        <p class="text-sm">Costo: <b>${{ number_format($baseCosto, 2, ',', '.') }}</b></p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Base Venta (EXWORKS)</p>
+                        <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                            ${{ number_format($baseVenta, 2, ',', '.') }}
+                        </p>
+
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Base Costo</p>
+                        <p class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                            ${{ number_format($baseCosto, 2, ',', '.') }}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {{-- AGREGAR ADICIÓN (SELECT ÚNICO) --}}
+            {{-- AGREGAR ADICIÓN (CATÁLOGO DE OPCIONES DEL PRODUCTO) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm mb-6">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-2">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                        Agregar adición (selector)
+                        Crear / actualizar adición del producto
                     </h3>
                     <span class="text-xs px-3 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
-                        Selecciona y agrega
+                        Catálogo del producto
                     </span>
                 </div>
+
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Esto solo define las adiciones disponibles y sus precios. En la cotización decides si se agregan o no.
+                </p>
 
                 <form method="POST" action="{{ route('admin.productos.opciones.store', $producto) }}"
                       class="grid grid-cols-1 md:grid-cols-6 gap-4">
@@ -113,26 +133,25 @@
                                class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                     </div>
 
-                    {{-- Si tu controller guarda categoria, mandamos una fija --}}
                     <input type="hidden" name="categoria" value="Adiciones">
 
                     <div class="md:col-span-6 flex justify-end">
                         <button class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-                            + Agregar
+                            Guardar adición
                         </button>
                     </div>
                 </form>
             </div>
 
-            {{-- ADICIONES AGREGADAS (tabla limpia) --}}
+            {{-- ADICIONES DISPONIBLES (NO SUMAMOS AL PRODUCTO) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                    Adiciones agregadas
+                    Adiciones disponibles para este producto
                 </h3>
 
                 @if($producto->opciones->count() === 0)
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        Aún no has agregado adiciones.
+                        Aún no has creado adiciones para este producto.
                     </p>
                 @else
                     <div class="overflow-x-auto">
@@ -140,13 +159,14 @@
                             <thead>
                                 <tr class="text-left text-gray-600 dark:text-gray-300">
                                     <th class="py-2">Opción</th>
-                                    <th class="py-2 text-right">Venta</th>
-                                    <th class="py-2 text-right">Costo</th>
+                                    <th class="py-2 text-right">Venta (unit)</th>
+                                    <th class="py-2 text-right">Costo (unit)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($producto->opciones as $opcion)
                                     @php
+                                        // Si cargas precios con latest() en el controller, first() será el más reciente.
                                         $p = $opcion->precios->first();
                                         $v = (float)($p->precio_venta ?? 0);
                                         $c = (float)($p->precio_costo ?? 0);
@@ -169,20 +189,8 @@
                 @endif
             </div>
 
-            {{-- TOTAL --}}
-            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">TOTAL</h3>
-                <div class="text-sm text-gray-700 dark:text-gray-200 space-y-2">
-                    <div class="flex justify-between">
-                        <span>Total Venta</span>
-                        <b>${{ number_format($totalVenta,2,',','.') }}</b>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Total Costo</span>
-                        <b>${{ number_format($totalCosto,2,',','.') }}</b>
-                    </div>
-                </div>
-            </div>
+            {{-- ✅ IMPORTANTE: quitamos el "TOTAL" del producto --}}
+            {{-- El total real se calcula en la cotización (por línea: base*cantidad + adiciones). --}}
 
         </div>
     </div>

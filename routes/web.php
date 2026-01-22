@@ -44,7 +44,7 @@ Route::prefix('admin')->as('admin.')->group(function () {
         ->name('productos.opciones.store');
 
     Route::resource('cotizaciones', CotizacionController::class);
-    Route::resource('cotizaciones', CotizacionController::class);
+
 
     // ✅ ITEMS (líneas de cotización)
     Route::post('cotizaciones/{cotizacion}/items', [CotizacionController::class, 'agregarItem'])
