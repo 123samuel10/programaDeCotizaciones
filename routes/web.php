@@ -22,11 +22,23 @@ Route::middleware('auth')->group(function () {
 
 
 
+
 // Route::prefix('admin')->name('admin.')->group(function () {
 //     Route::resource('productos', ProductoController::class);
+
+//     Route::post('productos/{producto}/opciones', [ProductoController::class, 'agregarOpcion'])
+//         ->name('productos.opciones.store');
 // });
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::resource('productos', ProductoController::class);
+    Route::resource('productos', \App\Http\Controllers\Admin\ProductoController::class);
+
+    Route::post('productos/{producto}/opciones', [\App\Http\Controllers\Admin\ProductoController::class, 'agregarOpcion'])
+        ->name('productos.opciones.store');
+
+    Route::post('productos/{producto}/predeterminadas', [\App\Http\Controllers\Admin\ProductoController::class, 'agregarPredeterminadas'])
+        ->name('productos.predeterminadas');
 });
+
+
 
 require __DIR__.'/auth.php';

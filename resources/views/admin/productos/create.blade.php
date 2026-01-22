@@ -1,152 +1,85 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Crear Producto
+        <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
+            Nuevo Producto (Standard EXWORKS)
         </h2>
     </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-10">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 
-            <div class="bg-white dark:bg-gray-800 shadow-sm sm:rounded-lg p-6">
-                <form action="{{ route('admin.productos.store') }}" method="POST">
+            @if($errors->any())
+                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
+                    <ul class="list-disc ml-6 text-sm">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
+                <form method="POST" action="{{ route('admin.productos.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @csrf
 
-                    {{-- CLIENTE --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">
-                            Cliente
-                        </label>
+                    <input name="marca" placeholder="Marca"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('marca') }}">
 
-                        <select name="cliente_id" class="w-full border rounded p-2" required>
-                            <option value="">Seleccione un cliente</option>
-                            @foreach($clientes as $cliente)
-                                <option value="{{ $cliente->id }}">
-                                    {{ $cliente->name }} - {{ $cliente->email }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <input name="modelo" placeholder="Modelo"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('modelo') }}">
+
+                    <div class="md:col-span-2">
+                        <input name="nombre_producto" placeholder="Nombre del producto"
+                            class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                            value="{{ old('nombre_producto') }}">
                     </div>
 
-                    {{-- NOMBRE --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">
-                            Nombre del producto
-                        </label>
-                        <input
-                            type="text"
-                            name="nombre"
-                            class="w-full border rounded p-2"
-                            required
-                            placeholder="Ej: Nevera Frost 300L"
-                        >
+                    <div class="md:col-span-2">
+                        <textarea name="descripcion" rows="4" placeholder="Descripción"
+                            class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">{{ old('descripcion') }}</textarea>
                     </div>
 
-                    {{-- MARCA --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Marca</label>
-                        <select name="marca" class="w-full border rounded p-2" required>
-                            @foreach($marcas as $marca)
-                                <option value="{{ $marca }}">{{ $marca }}</option>
-                            @endforeach
-                        </select>
+                    <input name="repisas_iluminadas" type="number" min="0" step="1"
+       placeholder="# Repisas Iluminadas"
+       class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+       value="{{ old('repisas_iluminadas') }}">
+
+                    <input name="refrigerante" placeholder="Refrigerante (ej: HFC)"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('refrigerante') }}">
+
+                    <input name="longitud" type="number" placeholder="Longitud (mm)"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('longitud') }}">
+
+                    <input name="profundidad" type="number" placeholder="Profundidad (mm)"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('profundidad') }}">
+
+                    <input name="altura" type="number" placeholder="Altura (mm)"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('altura') }}">
+
+                    <input name="precio_base_venta" type="number" step="0.01" placeholder="Base venta (EXWORKS)"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('precio_base_venta') }}">
+
+                    <input name="precio_base_costo" type="number" step="0.01" placeholder="Base costo"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('precio_base_costo') }}">
+
+                    <div class="md:col-span-2 flex justify-end gap-3">
+                        <a href="{{ route('admin.productos.index') }}"
+                           class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
+                            Cancelar
+                        </a>
+                        <button class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                            Guardar
+                        </button>
                     </div>
 
-                    {{-- TIPO --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Tipo</label>
-                        <select name="tipo" class="w-full border rounded p-2" required>
-                            @foreach($tipos as $tipo)
-                                <option value="{{ $tipo }}">{{ $tipo }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- COLOR --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Color</label>
-                        <select name="color" class="w-full border rounded p-2" required>
-                            @foreach($colores as $color)
-                                <option value="{{ $color }}">{{ $color }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- CAPACIDAD --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Capacidad</label>
-                        <select name="capacidad" class="w-full border rounded p-2" required>
-                            @foreach($capacidades as $capacidad)
-                                <option value="{{ $capacidad }}">{{ $capacidad }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- MODELO --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Modelo</label>
-                        <input
-                            type="text"
-                            name="modelo"
-                            class="w-full border rounded p-2"
-                            required
-                            placeholder="Ej: RT-350"
-                        >
-                    </div>
-
-                    {{-- PESO --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Peso</label>
-                        <input
-                            type="text"
-                            name="peso"
-                            class="w-full border rounded p-2"
-                            required
-                            placeholder="Ej: 75 kg"
-                        >
-                    </div>
-
-                    {{-- DIMENSIONES --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Dimensiones</label>
-                        <input
-                            type="text"
-                            name="dimensiones"
-                            class="w-full border rounded p-2"
-                            required
-                            placeholder="Ej: 180 x 70 x 65 cm"
-                        >
-                    </div>
-
-                    {{-- PRECIO --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Precio</label>
-                        <input
-                            type="number"
-                            name="precio"
-                            class="w-full border rounded p-2"
-                            required
-                        >
-                    </div>
-
-                    {{-- STOCK --}}
-                    <div class="mb-4">
-                        <label class="block text-gray-700 dark:text-gray-200">Stock</label>
-                        <input
-                            type="number"
-                            name="stock"
-                            class="w-full border rounded p-2"
-                            required
-                        >
-                    </div>
-
-                    {{-- BOTÓN --}}
-                    <button
-                        type="submit"
-                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    >
-                        Guardar Producto
-                    </button>
                 </form>
             </div>
 

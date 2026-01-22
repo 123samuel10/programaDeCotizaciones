@@ -7,25 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Producto extends Model
 {
+    use HasFactory;
 
+protected $fillable = [
+    'marca','modelo','nombre_producto','descripcion','foto',
+    'repisas_iluminadas', // ✅
+    'refrigerante','longitud','profundidad','altura',
+    'precio_base_venta','precio_base_costo'
+];
 
-    protected $fillable = [
-        'cliente_id',
-        'nombre',
-        'marca',
-        'modelo',
-        'tipo',
-        'capacidad',
-        'peso',
-        'dimensiones',
-        'color',
-        'precio',
-        'stock',
-    ];
-
-    // Relación con cliente (User)
-    public function cliente()
+    public function opciones()
     {
-        return $this->belongsTo(User::class, 'cliente_id');
+        return $this->hasMany(Opcion::class);
     }
 }

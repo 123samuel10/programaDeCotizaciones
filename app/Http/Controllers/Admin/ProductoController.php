@@ -5,100 +5,122 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Producto;
-use App\Models\User;
+use App\Models\Opcion;
+use App\Models\OpcionPrecio;
+
 class ProductoController extends Controller
 {
- // Mostrar lista de productos
-public function index()
-{
-    $productos = Producto::with('cliente')->get();
-    return view('admin.productos.index', compact('productos'));
-}
+    public function index()
+    {
+        $productos = Producto::latest()->get();
+        return view('admin.productos.index', compact('productos'));
+    }
 
-
-    // Mostrar formulario para crear un producto
     public function create()
     {
-     // Opciones de producto
-    $marcas = ['LG', 'Samsung', 'Whirlpool', 'Mabe'];
-    $tipos = ['Nevera', 'Congelador', 'Microondas', 'Horno'];
-    $colores = ['Blanco', 'Negro', 'Acero inoxidable', 'Gris'];
-    $capacidades = ['100 litros', '200 litros', '300 litros', '500 litros'];
-
-    // 🔹 CLIENTES REGISTRADOS
-
-    $clientes = User::where('role', 'cliente')->get();
-
-
-    return view(
-        'admin.productos.create',
-        compact('marcas', 'tipos', 'colores', 'capacidades', 'clientes')
-    );
+        return view('admin.productos.create');
     }
 
-   public function store(Request $request)
-{
-    $request->validate([
-        'cliente_id'  => 'required|exists:users,id',
-        'nombre'      => 'required|string|max:255',
-        'marca'       => 'required|string|max:255',
-        'modelo'      => 'required|string|max:255',
-        'tipo'        => 'required|string|max:255',
-        'capacidad'   => 'required|string|max:50',
-        'peso'        => 'required|string|max:50',
-        'dimensiones' => 'required|string|max:255',
-        'color'       => 'required|string|max:50',
-        'precio'      => 'required|numeric',
-        'stock'       => 'required|integer',
-    ]);
-
-    Producto::create($request->all());
-
-    return redirect()
-        ->route('admin.productos.index')
-        ->with('success', 'Producto creado correctamente.');
-}
-
-
-    // Mostrar un producto específico
-    public function show(Producto $producto)
+    public function store(Request $request)
     {
-        return view('admin.productos.show', compact('producto'));
+        $request->validate([
+            'marca' => 'required|string|max:255',
+            'modelo' => 'required|string|max:255',
+            'nombre_producto' => 'required|string|max:255',
+            'repisas_iluminadas' => 'nullable|integer|min:0|max:20',
+
+            'precio_base_venta' => 'required|numeric',
+            'precio_base_costo' => 'required|numeric',
+        ]);
+
+       $producto = Producto::create($request->only([
+    'marca','modelo','nombre_producto','descripcion','foto',
+    'repisas_iluminadas', // ✅
+    'refrigerante','longitud','profundidad','altura',
+    'precio_base_venta','precio_base_costo'
+]));
+
+
+        return redirect()->route('admin.productos.edit', $producto)
+            ->with('success', 'Producto creado correctamente');
     }
 
-    // Mostrar formulario para editar un producto
     public function edit(Producto $producto)
     {
-        return view('admin.productos.edit', compact('producto'));
+        $producto->load(['opciones.precios' => function ($q) {
+            $q->latest();
+        }]);
+
+        $categorias = [
+            'Accesorios',
+            'Refrigeración',
+            'CO2-Control',
+            'Logística',
+            'Otros',
+        ];
+
+        // ✅ Selector por categorías (como Excel)
+        $opcionesDisponibles = [
+            'Accesorios' => [
+                'ESPEJO SUPERIOR FRUVER Y CARNES',
+                '1 REPISA ADICIONAL',
+                '2 REPISAS ADICIONALES',
+            ],
+            'Refrigeración' => [
+                'EVAPORADOR PARA CARNES CON DESHIELO ELÉCTRICO',
+                'R290 EVAP PRESURIZADO',
+                'R290 UNIDAD CONDENSADORA AIRE',
+                'R290 UNIDAD CONDENSADORA AGUA',
+            ],
+            'CO2-Control' => [
+                'CO2 EVAP PRESURIZADO',
+                'CO2 EVAP CAREL (EEV DRIVER, CONTROL Y SENSORES)',
+                'CO2 EVAP DANFOSS (EEV DRIVER, CONTROL Y SENSORES)',
+            ],
+            'Logística' => [
+                'SKD (SEMI-KNOCKED DOWN)',
+            ],
+        ];
+
+        return view('admin.productos.edit', compact(
+            'producto',
+            'categorias',
+            'opcionesDisponibles'
+        ));
     }
 
-    // Actualizar un producto
-   // Actualizar un producto
-public function update(Request $request, Producto $producto)
+   public function agregarOpcion(Request $request, Producto $producto)
 {
     $request->validate([
         'nombre' => 'required|string|max:255',
-        'marca' => 'required|string|max:255',
-        'modelo' => 'nullable|string|max:255',
-        'tipo' => 'required|string|max:255',
-        'capacidad' => 'required|string|max:50',
-        'peso' => 'required|string|max:50',
-        'dimensiones' => 'nullable|string|max:255',
-        'color' => 'required|string|max:50',
-        'precio' => 'required|numeric',
-        'stock' => 'required|integer',
+        'precio_venta' => 'required|numeric',
+        'precio_costo' => 'required|numeric',
     ]);
 
-    $producto->update($request->all());
+    $nombre = trim(preg_replace('/\s+/', ' ', $request->nombre)); // limpia espacios raros
 
-    // Redirigir a la lista de productos con mensaje
-    return redirect()->route('admin.productos.index')->with('success', 'Producto actualizado correctamente.');
+    // Buscar si ya existe esa opción en ese producto
+    $opcion = Opcion::firstOrCreate(
+        ['producto_id' => $producto->id, 'nombre' => $nombre],
+        ['categoria' => $request->categoria ?? 'Adiciones']
+    );
+
+    // Guardar precio (si ya tiene, actualiza el último)
+    $precio = $opcion->precios()->latest()->first();
+
+    if ($precio) {
+        $precio->update([
+            'precio_venta' => $request->precio_venta,
+            'precio_costo' => $request->precio_costo,
+        ]);
+    } else {
+        $opcion->precios()->create([
+            'precio_venta' => $request->precio_venta,
+            'precio_costo' => $request->precio_costo,
+        ]);
+    }
+
+    return back()->with('success', 'Adición guardada / actualizada.');
 }
 
-    // Eliminar un producto
-    public function destroy(Producto $producto)
-    {
-        $producto->delete();
-        return redirect()->route('admin.productos.index')->with('success', 'Producto eliminado correctamente.');
-    }
 }

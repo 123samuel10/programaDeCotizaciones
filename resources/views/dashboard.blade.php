@@ -14,7 +14,7 @@
                     ¡Bienvenido de nuevo, {{ Auth::user()->name }}!
                 </h3>
                 <p class="text-gray-700 dark:text-gray-300">
-                    @if(Auth::user()->role === 'administrador')
+                    @if(Auth::user()->role === 'admin')
                         Desde aquí puedes gestionar tus productos, revisar estadísticas y administrar tu tienda de manera segura.
                     @else
                         Bienvenido a tu panel, aquí puedes ver tus compras y tu información personal.
@@ -23,7 +23,7 @@
             </div>
 
             {{-- Panel de acciones rápidas solo para admin --}}
-            @if(Auth::user()->role === 'administrador')
+            @if(Auth::user()->role === 'admin')
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                 {{-- Card: Ver Productos --}}

@@ -1,76 +1,59 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Productos
-        </h2>
+        <div class="flex items-center justify-between">
+            <h2 class="font-semibold text-2xl text-gray-800 dark:text-gray-200 leading-tight">
+                Productos
+            </h2>
+
+            <a href="{{ route('admin.productos.create') }}"
+               class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                + Nuevo producto
+            </a>
+        </div>
     </x-slot>
 
-    <div class="py-6">
+    <div class="py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg p-6">
-                <div class="flex justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                        Lista de Productos
-                    </h3>
-                    <a href="{{ route('admin.productos.create') }}"
-                       class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
-                        + Crear Producto
-                    </a>
+            @if(session('success'))
+                <div class="mb-6 p-4 rounded-xl bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-100 dark:border-green-900">
+                    {{ session('success') }}
                 </div>
+            @endif
 
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-4 py-2">Cliente</th>
-                            <th class="px-4 py-2">Nombre</th>
-                            <th class="px-4 py-2">Marca</th>
-                            <th class="px-4 py-2">Modelo</th>
-                            <th class="px-4 py-2">Tipo</th>
-                            <th class="px-4 py-2">Capacidad</th>
-                            <th class="px-4 py-2">Precio</th>
-                            <th class="px-4 py-2">Stock</th>
-                            <th class="px-4 py-2 text-center">Acciones</th>
-                        </tr>
-                    </thead>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                @forelse($productos as $producto)
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                            {{ $producto->nombre_producto }}
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            {{ $producto->marca }} · {{ $producto->modelo }}
+                        </p>
 
-                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        @foreach($productos as $producto)
-                        <tr>
-                            <td class="px-4 py-2">
-                                {{ $producto->cliente->name ?? 'Sin cliente' }}
-                            </td>
-                            <td class="px-4 py-2">{{ $producto->nombre }}</td>
-                            <td class="px-4 py-2">{{ $producto->marca }}</td>
-                            <td class="px-4 py-2">{{ $producto->modelo }}</td>
-                            <td class="px-4 py-2">{{ $producto->tipo }}</td>
-                            <td class="px-4 py-2">{{ $producto->capacidad }}</td>
-                            <td class="px-4 py-2">
-                                ${{ number_format($producto->precio, 0, ',', '.') }}
-                            </td>
-                            <td class="px-4 py-2">{{ $producto->stock }}</td>
-                            <td class="px-4 py-2 text-center">
-                                <a href="{{ route('admin.productos.edit', $producto->id) }}"
-                                   class="bg-blue-500 text-white px-3 py-1 rounded">
-                                    Editar
-                                </a>
+                        <div class="mt-4 text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                            <div class="flex justify-between">
+                                <span>Base Venta (EXWORKS)</span>
+                                <span class="font-semibold">${{ number_format($producto->precio_base_venta, 2, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Base Costo</span>
+                                <span class="font-semibold">${{ number_format($producto->precio_base_costo, 2, ',', '.') }}</span>
+                            </div>
+                        </div>
 
-                                <form action="{{ route('admin.productos.destroy', $producto->id) }}"
-                                      method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="bg-red-500 text-white px-3 py-1 rounded"
-                                            onclick="return confirm('¿Eliminar producto?')">
-                                        Eliminar
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
+                        <a href="{{ route('admin.productos.edit', $producto) }}"
+                           class="mt-5 inline-flex w-full justify-center px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold">
+                            Abrir / Editar cotización
+                        </a>
+                    </div>
+                @empty
+                    <div class="col-span-full p-8 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200">
+                        No hay productos aún. Crea el primero con el botón <b>Nuevo producto</b>.
+                    </div>
+                @endforelse
             </div>
+
         </div>
     </div>
 </x-app-layout>
