@@ -9,7 +9,7 @@ class Opcion extends Model
 {
     use HasFactory;
 
-    // ✅ IMPORTANTE: forzar nombre de tabla en español
+
     protected $table = 'opciones';
 
     protected $fillable = [

@@ -46,14 +46,14 @@ Route::prefix('admin')->as('admin.')->group(function () {
 
     // Recursos principales
     Route::resource('productos', ProductoController::class);
-      // ✅ ESTA ES LA QUE TE FALTA
+      // ESTA ES LA QUE TE FALTA
     Route::post('productos/{producto}/opciones', [ProductoController::class, 'agregarOpcion'])
         ->name('productos.opciones.store');
 
     Route::resource('cotizaciones', CotizacionController::class);
 
 
-    // ✅ ITEMS (líneas de cotización)
+    // ITEMS (líneas de cotización)
     Route::post('cotizaciones/{cotizacion}/items', [CotizacionController::class, 'agregarItem'])
         ->name('cotizaciones.items.store');
 
@@ -63,7 +63,7 @@ Route::prefix('admin')->as('admin.')->group(function () {
     Route::delete('cotizaciones/{cotizacion}/items/{item}', [CotizacionController::class, 'eliminarItem'])
         ->name('cotizaciones.items.destroy');
 
-    // ✅ ADICIONES POR ITEM (no por cotización)
+    // ADICIONES POR ITEM (no por cotización)
     Route::post('cotizaciones/{cotizacion}/items/{item}/opciones', [CotizacionController::class, 'agregarOpcionItem'])
         ->name('cotizaciones.items.opciones.store');
 

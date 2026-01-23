@@ -19,7 +19,10 @@
             @endif
 
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
-                <form method="POST" action="{{ route('admin.productos.store') }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form method="POST"
+                      action="{{ route('admin.productos.store') }}"
+                      enctype="multipart/form-data"
+                      class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @csrf
 
                     <input name="marca" placeholder="Marca"
@@ -41,10 +44,33 @@
                             class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">{{ old('descripcion') }}</textarea>
                     </div>
 
+                    {{-- ✅ FOTO --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Foto del producto</label>
+
+                        <div class="flex items-center gap-4">
+                            <div class="w-24 h-24 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 overflow-hidden flex items-center justify-center">
+                                <span class="text-xs text-gray-400">Sin foto</span>
+                            </div>
+
+                            <input type="file" name="foto" accept="image/*"
+                                   class="block w-full text-sm text-gray-600 dark:text-gray-300
+                                          file:mr-4 file:py-2 file:px-4
+                                          file:rounded-xl file:border-0
+                                          file:bg-gray-100 file:text-gray-800
+                                          hover:file:bg-gray-200
+                                          dark:file:bg-gray-700 dark:file:text-gray-100 dark:hover:file:bg-gray-600">
+                        </div>
+
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            JPG / PNG / WEBP · máximo 4MB.
+                        </p>
+                    </div>
+
                     <input name="repisas_iluminadas" type="number" min="0" step="1"
-       placeholder="# Repisas Iluminadas"
-       class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-       value="{{ old('repisas_iluminadas') }}">
+                        placeholder="# Repisas Iluminadas"
+                        class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                        value="{{ old('repisas_iluminadas') }}">
 
                     <input name="refrigerante" placeholder="Refrigerante (ej: HFC)"
                         class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
@@ -79,7 +105,6 @@
                             Guardar
                         </button>
                     </div>
-
                 </form>
             </div>
 

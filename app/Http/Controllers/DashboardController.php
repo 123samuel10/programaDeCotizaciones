@@ -30,9 +30,9 @@ class DashboardController extends Controller
 }
 
 
-        // ✅ CLIENTE: últimas cotizaciones del usuario
+        // CLIENTE: últimas cotizaciones del usuario
         $misCotizaciones = Cotizacion::with(['producto'])
-            ->where('user_id', $user->id) // 👈 si tu FK es diferente, me dices y lo ajusto
+            ->where('user_id', $user->id)
             ->latest()
             ->take(10)
             ->get();

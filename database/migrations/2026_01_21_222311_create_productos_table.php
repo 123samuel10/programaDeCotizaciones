@@ -18,10 +18,10 @@ $table->string('marca');
 $table->string('modelo');
 $table->string('nombre_producto');
 
-$table->text('descripcion')->nullable(); // ✅ AGREGA ESTO
+$table->text('descripcion')->nullable();
 $table->string('foto')->nullable();
 
-$table->unsignedTinyInteger('repisas_iluminadas')->nullable(); // ✅
+$table->unsignedTinyInteger('repisas_iluminadas')->nullable();
 
 $table->string('refrigerante')->nullable();
 $table->integer('longitud')->nullable();

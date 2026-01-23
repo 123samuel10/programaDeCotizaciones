@@ -127,7 +127,7 @@
                             </div>
                         </div>
 
-                        {{-- ✅ Acciones --}}
+                        {{-- Acciones --}}
                         <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end pt-2">
                             <a href="{{ route('admin.clientes.index') }}"
                                class="inline-flex justify-center px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-semibold">
@@ -166,7 +166,7 @@
             </span>
         </div>
 
-        {{-- Email (✅ aquí está la corrección) --}}
+        {{-- Email  --}}
         <div class="grid grid-cols-12 gap-3 items-start">
             <span class="col-span-4 text-gray-500 dark:text-gray-400">Email</span>
 
@@ -175,12 +175,7 @@
                 {{ $cliente->email }}
             </span>
 
-            {{-- Opción B: si prefieres que se vea más "limpio", usa esto en vez de arriba:
-            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right truncate"
-                  title="{{ $cliente->email }}">
-                {{ $cliente->email }}
-            </span>
-            --}}
+
         </div>
 
         {{-- Creado --}}

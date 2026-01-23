@@ -30,6 +30,22 @@
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 @forelse($productos as $producto)
                     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
+
+                        {{-- ✅ FOTO --}}
+                        <div class="mb-4">
+                            <div class="w-full h-40 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                                @if($producto->foto)
+                                    <img src="{{ asset('storage/'.$producto->foto) }}"
+                                         class="w-full h-full object-cover"
+                                         alt="Foto {{ $producto->nombre_producto }}">
+                                @else
+                                    <div class="w-full h-full flex items-center justify-center text-sm text-gray-400">
+                                        Sin foto
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
                             {{ $producto->nombre_producto }}
                         </h3>
@@ -58,7 +74,7 @@
                                 Abrir
                             </a>
 
-                            {{-- ✅ Form eliminar (sin confirm) --}}
+                            {{-- ✅ eliminar con modal --}}
                             <form method="POST"
                                   action="{{ route('admin.productos.destroy', $producto) }}"
                                   class="w-full js-delete-form"
@@ -90,11 +106,8 @@
          aria-labelledby="deleteModalTitle"
          aria-modal="true"
          role="dialog">
-
-        {{-- Backdrop --}}
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" id="deleteBackdrop"></div>
 
-        {{-- Panel --}}
         <div class="relative min-h-full flex items-center justify-center p-4">
             <div class="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl overflow-hidden
                         transform transition-all duration-200 scale-95 opacity-0"
@@ -149,7 +162,6 @@
         </div>
     </div>
 
-    {{-- ✅ Script modal (sin librerías) --}}
     <script>
     (function () {
         const modal = document.getElementById('deleteModal');
@@ -168,21 +180,16 @@
         function openModal(form) {
             currentForm = form;
 
-            const prodName = form.dataset.producto || 'este producto';
-            const subtitle = form.dataset.subtitle || '';
+            nombre.textContent = form.dataset.producto || 'este producto';
+            nombreMini.textContent = form.dataset.producto || 'este producto';
+            sub.textContent = form.dataset.subtitle || '';
 
-            nombre.textContent = prodName;
-            nombreMini.textContent = prodName;
-            sub.textContent = subtitle;
-
-            // reset botón
             confirmBtn.disabled = false;
             confirmBtn.textContent = 'Sí, eliminar';
 
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
 
-            // animación entrada
             requestAnimationFrame(() => {
                 panel.classList.remove('scale-95', 'opacity-0');
                 panel.classList.add('scale-100', 'opacity-100');
@@ -202,31 +209,23 @@
             }, 160);
         }
 
-        // Abrir
         document.querySelectorAll('.js-delete-form .js-open-delete').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const form = e.currentTarget.closest('form');
-                openModal(form);
+                openModal(e.currentTarget.closest('form'));
             });
         });
 
-        // Cancelar
         cancelBtn.addEventListener('click', closeModal);
 
-        // Confirmar
         confirmBtn.addEventListener('click', () => {
             if (!currentForm) return;
-
             confirmBtn.disabled = true;
             confirmBtn.textContent = 'Eliminando...';
-
             currentForm.submit();
         });
 
-        // Click fuera
         backdrop.addEventListener('click', closeModal);
 
-        // ESC
         document.addEventListener('keydown', (e) => {
             if (modal.classList.contains('hidden')) return;
             if (e.key === 'Escape') closeModal();

@@ -32,7 +32,7 @@
                 </div>
             @endif
 
-            {{-- ✅ AGREGAR LÍNEA (PRODUCTO + CANTIDAD) --}}
+            {{-- AGREGAR LÍNEA (PRODUCTO + CANTIDAD) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 mb-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Agregar producto a la cotización
@@ -69,7 +69,7 @@
                 </form>
             </div>
 
-            {{-- ✅ LISTA DE LÍNEAS --}}
+            {{-- LISTA DE LÍNEAS --}}
             <div class="space-y-6">
                 @forelse($cotizacion->items as $item)
 
@@ -97,7 +97,7 @@
                                     {{ $producto->marca ?? '' }} {{ $producto->modelo ?? '' }}
                                 </div>
 
-                                {{-- ✅ Actualizar cantidad --}}
+                                {{-- Actualizar cantidad --}}
                                 <div class="mt-3 flex flex-wrap gap-2 items-end">
                                     <form method="POST"
                                           action="{{ route('admin.cotizaciones.items.update', [$cotizacion->id, $item->id]) }}"
@@ -116,7 +116,7 @@
                                         </button>
                                     </form>
 
-                                    {{-- ✅ Eliminar línea --}}
+                                    {{--  Eliminar línea --}}
                                     <form method="POST"
                                           action="{{ route('admin.cotizaciones.items.destroy', [$cotizacion->id, $item->id]) }}"
                                           onsubmit="return confirm('¿Eliminar esta línea?')">
@@ -137,7 +137,7 @@
                             </div>
                         </div>
 
-                        {{-- ✅ Adiciones SOLO para este item --}}
+                        {{-- Adiciones SOLO para este item --}}
                         <div class="mt-6 border-t dark:border-gray-700 pt-5">
                             <h4 class="font-semibold text-gray-900 dark:text-gray-100 mb-3">
                                 Adiciones (solo para este producto)
@@ -218,7 +218,7 @@
                 @endforelse
             </div>
 
-            {{-- ✅ TOTAL GENERAL --}}
+            {{-- TOTAL GENERAL --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 mt-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">TOTAL</h3>
 
