@@ -142,48 +142,64 @@
                 </div>
 
                 {{-- SIDEBAR: INFO / AYUDA --}}
-                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 shadow-sm h-fit">
-                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                        Resumen
-                    </h3>
+              {{-- SIDEBAR: INFO / AYUDA --}}
+<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 shadow-sm h-fit">
+    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
+        Resumen
+    </h3>
 
-                    <div class="mt-4 space-y-3 text-sm">
-                        <div class="flex justify-between gap-3">
-                            <span class="text-gray-500 dark:text-gray-400">Nombre</span>
-                            <span class="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                                {{ $cliente->name }}
-                            </span>
-                        </div>
+    <div class="mt-4 space-y-3 text-sm">
 
-                        <div class="flex justify-between gap-3">
-                            <span class="text-gray-500 dark:text-gray-400">Empresa</span>
-                            <span class="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                                {{ $cliente->empresa ?? '—' }}
-                            </span>
-                        </div>
+        {{-- Nombre --}}
+        <div class="grid grid-cols-12 gap-3 items-start">
+            <span class="col-span-4 text-gray-500 dark:text-gray-400">Nombre</span>
+            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                {{ $cliente->name }}
+            </span>
+        </div>
 
-                        <div class="flex justify-between gap-3">
-                            <span class="text-gray-500 dark:text-gray-400">Email</span>
-                            <span class="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                                {{ $cliente->email }}
-                            </span>
-                        </div>
+        {{-- Empresa --}}
+        <div class="grid grid-cols-12 gap-3 items-start">
+            <span class="col-span-4 text-gray-500 dark:text-gray-400">Empresa</span>
+            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                {{ $cliente->empresa ?? '—' }}
+            </span>
+        </div>
 
-                        <div class="flex justify-between gap-3">
-                            <span class="text-gray-500 dark:text-gray-400">Creado</span>
-                            <span class="font-semibold text-gray-900 dark:text-gray-100 text-right">
-                                {{ optional($cliente->created_at)->format('Y-m-d') ?? '—' }}
-                            </span>
-                        </div>
-                    </div>
+        {{-- Email (✅ aquí está la corrección) --}}
+        <div class="grid grid-cols-12 gap-3 items-start">
+            <span class="col-span-4 text-gray-500 dark:text-gray-400">Email</span>
 
-                    <div class="mt-6 p-4 rounded-2xl bg-blue-50 text-blue-800 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900">
-                        <div class="font-semibold mb-1">Tip</div>
-                        <p class="text-sm">
-                            Para cotizaciones es mejor tener <b>Empresa</b> llena si el cliente es corporativo.
-                        </p>
-                    </div>
-                </div>
+            {{-- Opción A: NO se sale y parte el texto (recomendado) --}}
+            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-all">
+                {{ $cliente->email }}
+            </span>
+
+            {{-- Opción B: si prefieres que se vea más "limpio", usa esto en vez de arriba:
+            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right truncate"
+                  title="{{ $cliente->email }}">
+                {{ $cliente->email }}
+            </span>
+            --}}
+        </div>
+
+        {{-- Creado --}}
+        <div class="grid grid-cols-12 gap-3 items-start">
+            <span class="col-span-4 text-gray-500 dark:text-gray-400">Creado</span>
+            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right">
+                {{ optional($cliente->created_at)->format('Y-m-d') ?? '—' }}
+            </span>
+        </div>
+    </div>
+
+    <div class="mt-6 p-4 rounded-2xl bg-blue-50 text-blue-800 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900">
+        <div class="font-semibold mb-1">Tip</div>
+        <p class="text-sm">
+            Para cotizaciones es mejor tener <b>Empresa</b> llena si el cliente es corporativo.
+        </p>
+    </div>
+</div>
+
 
             </div>
         </div>

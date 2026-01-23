@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Producto;
 use App\Models\Opcion;
 use App\Models\OpcionPrecio;
-use App\Models\Cotizacion; // ✅ para validar si se puede eliminar
+use App\Models\Cotizacion; // para validar si se puede eliminar
 use App\Models\CotizacionItem;
 
 class ProductoController extends Controller
@@ -61,11 +61,10 @@ class ProductoController extends Controller
         ];
 
         $opcionesDisponibles = [
-            'Accesorios' => [
-                'ESPEJO SUPERIOR FRUVER Y CARNES',
-                '1 REPISA ADICIONAL',
-                '2 REPISAS ADICIONALES',
-            ],
+         'Accesorios' => [
+    'ESPEJO SUPERIOR FRUVER Y CARNES',
+    'REPISA ADICIONAL',
+],
             'Refrigeración' => [
                 'EVAPORADOR PARA CARNES CON DESHIELO ELÉCTRICO',
                 'R290 EVAP PRESURIZADO',
@@ -136,7 +135,7 @@ class ProductoController extends Controller
 
  public function destroy(Producto $producto)
 {
-    // ✅ Evita borrar si ya está usado en alguna cotización (líneas)
+    // Evita borrar si ya está usado en alguna cotización (líneas)
     $tieneItems = CotizacionItem::where('producto_id', $producto->id)->exists();
 
     if ($tieneItems) {

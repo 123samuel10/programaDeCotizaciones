@@ -24,19 +24,18 @@
         $baseCosto = (float) $producto->precio_base_costo;
 
         // ✅ Lista PLANA para el SELECT (sin categorías)
-        $opcionesSelector = [
-            'ESPEJO SUPERIOR FRUVER Y CARNES',
-            'EVAPORADOR PARA CARNES CON DESHIELO ELÉCTRICO',
-            '1 REPISA ADICIONAL',
-            '2 REPISAS ADICIONALES',
-            'SKD (SEMI-KNOCKED DOWN)',
-            'R290 EVAP PRESURIZADO',
-            'R290 UNIDAD CONDENSADORA AIRE',
-            'R290 UNIDAD CONDENSADORA AGUA',
-            'CO2 EVAP PRESURIZADO',
-            'CO2 EVAP CAREL (EEV DRIVER, CONTROL Y SENSORES)',
-            'CO2 EVAP DANFOSS (EEV DRIVER, CONTROL Y SENSORES)',
-        ];
+       $opcionesSelector = [
+    'ESPEJO SUPERIOR FRUVER Y CARNES',
+    'EVAPORADOR PARA CARNES CON DESHIELO ELÉCTRICO',
+    'REPISA ADICIONAL', // ✅ solo una
+    'SKD (SEMI-KNOCKED DOWN)',
+    'R290 EVAP PRESURIZADO',
+    'R290 UNIDAD CONDENSADORA AIRE',
+    'R290 UNIDAD CONDENSADORA AGUA',
+    'CO2 EVAP PRESURIZADO',
+    'CO2 EVAP CAREL (EEV DRIVER, CONTROL Y SENSORES)',
+    'CO2 EVAP DANFOSS (EEV DRIVER, CONTROL Y SENSORES)',
+];
     @endphp
 
     <div class="py-10">

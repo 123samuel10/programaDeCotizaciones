@@ -15,7 +15,7 @@ return new class extends Migration
     $table->id();
     $table->foreignId('user_id')->constrained()->cascadeOnDelete();
 
-    $table->foreignId('producto_id')->nullable()->constrained()->nullOnDelete();
+    // $table->foreignId('producto_id')->nullable()->constrained()->nullOnDelete();
 
 
     $table->decimal('total_venta', 12, 2)->default(0);

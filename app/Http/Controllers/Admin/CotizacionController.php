@@ -74,7 +74,7 @@ class CotizacionController extends Controller
         return view('admin.cotizaciones.edit', compact('cotizacion', 'productos'));
     }
 
-    // ✅ AGREGAR ITEM (producto + cantidad) a la cotización
+    // AGREGAR ITEM (producto + cantidad) a la cotización
     public function agregarItem(Request $request, Cotizacion $cotizacion)
     {
         $request->validate([
@@ -97,7 +97,7 @@ class CotizacionController extends Controller
         return back()->with('success', 'Producto agregado a la cotización.');
     }
 
-    // ✅ ACTUALIZAR CANTIDAD de una línea
+    // ACTUALIZAR CANTIDAD de una línea
     public function actualizarItem(Request $request, Cotizacion $cotizacion, CotizacionItem $item)
     {
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
@@ -115,7 +115,7 @@ class CotizacionController extends Controller
         return back()->with('success', 'Cantidad actualizada.');
     }
 
-    // ✅ ELIMINAR ITEM (línea completa)
+    // ELIMINAR ITEM (línea completa)
     public function eliminarItem(Cotizacion $cotizacion, CotizacionItem $item)
     {
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
@@ -126,7 +126,7 @@ class CotizacionController extends Controller
         return back()->with('success', 'Línea eliminada.');
     }
 
-    // ✅ AGREGAR ADICIÓN A UN ITEM ESPECÍFICO
+    // GREGAR ADICIÓN A UN ITEM ESPECÍFICO
     public function agregarOpcionItem(Request $request, Cotizacion $cotizacion, CotizacionItem $item)
     {
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
@@ -179,7 +179,7 @@ class CotizacionController extends Controller
         return back()->with('success', 'Adición agregada a esa línea (solo a ese producto).');
     }
 
-    // ✅ ELIMINAR ADICIÓN DE UN ITEM
+    // ELIMINAR ADICIÓN DE UN ITEM
     public function eliminarOpcionItem(Cotizacion $cotizacion, CotizacionItem $item, CotizacionItemOpcion $op)
     {
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
@@ -191,7 +191,7 @@ class CotizacionController extends Controller
         return back()->with('success', 'Adición eliminada.');
     }
 
-    // ✅ RECALCULAR TOTALES (SUMA TODAS LAS LÍNEAS + SUS ADICIONES)
+    // RECALCULAR TOTALES (SUMA TODAS LAS LÍNEAS + SUS ADICIONES)
     private function recalcularTotales(Cotizacion $cotizacion): void
     {
         $cotizacion->load(['items.opciones']);

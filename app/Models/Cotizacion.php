@@ -11,8 +11,8 @@ class Cotizacion extends Model
 
    protected $fillable = [
     'user_id',
-    'producto_id',
-    'cantidad_producto',
+    // 'producto_id',
+    // 'cantidad_producto',
     'total_venta',
     'total_costo',
 ];
