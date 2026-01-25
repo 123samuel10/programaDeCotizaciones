@@ -31,7 +31,7 @@
                 @forelse($productos as $producto)
                     <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm">
 
-                        {{-- ✅ FOTO --}}
+                        {{-- FOTO --}}
                         <div class="mb-4">
                             <div class="w-full h-40 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                                 @if($producto->foto)
@@ -74,7 +74,7 @@
                                 Abrir
                             </a>
 
-                            {{-- ✅ eliminar con modal --}}
+                            {{-- eliminar con modal --}}
                             <form method="POST"
                                   action="{{ route('admin.productos.destroy', $producto) }}"
                                   class="w-full js-delete-form"
@@ -100,7 +100,7 @@
         </div>
     </div>
 
-    {{-- ✅ Modal eliminar producto --}}
+    {{-- Modal eliminar producto --}}
     <div id="deleteModal"
          class="fixed inset-0 z-50 hidden"
          aria-labelledby="deleteModalTitle"

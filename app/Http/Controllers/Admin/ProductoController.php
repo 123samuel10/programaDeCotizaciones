@@ -35,7 +35,7 @@ class ProductoController extends Controller
         'precio_base_venta' => 'required|numeric',
         'precio_base_costo' => 'required|numeric',
 
-        // ✅ FOTO
+        //  FOTO
         'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
     ]);
 
@@ -45,7 +45,7 @@ class ProductoController extends Controller
         'precio_base_venta','precio_base_costo'
     ]);
 
-    // ✅ Guardar foto en storage/public/productos
+    // Guardar foto en storage/public/productos
     if ($request->hasFile('foto')) {
         $data['foto'] = $request->file('foto')->store('productos', 'public');
     }
@@ -151,7 +151,7 @@ class ProductoController extends Controller
             return back()->with('error', 'No puedes eliminar este producto porque ya está usado en cotizaciones.');
         }
 
-        // ✅ borrar foto si existe
+        // borrar foto si existe
         if ($producto->foto && Storage::disk('public')->exists($producto->foto)) {
             Storage::disk('public')->delete($producto->foto);
         }
@@ -173,7 +173,7 @@ class ProductoController extends Controller
             'precio_base_venta' => 'required|numeric',
             'precio_base_costo' => 'required|numeric',
 
-            // ✅ FOTO
+            // FOTO
             'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 

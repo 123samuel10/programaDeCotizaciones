@@ -60,7 +60,7 @@
                 </div>
             @endif
 
-            {{-- ✅ EDITAR PRODUCTO (incluye foto) --}}
+            {{-- EDITAR PRODUCTO (incluye foto) --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-6 shadow-sm mb-6">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Editar producto</h3>
@@ -95,7 +95,7 @@
                                   class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">{{ old('descripcion', $producto->descripcion) }}</textarea>
                     </div>
 
-                    {{-- ✅ FOTO + PREVIEW --}}
+                    {{-- FOTO + PREVIEW --}}
                     <div class="md:col-span-2">
                         <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Foto del producto</label>
 

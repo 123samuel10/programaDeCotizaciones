@@ -12,9 +12,7 @@ Route::get('/', function () {
 });
 
 
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
+
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -27,16 +25,6 @@ Route::middleware('auth')->group(function () {
 });
 
 
-
-
-
-
-// Route::prefix('admin')->name('admin.')->group(function () {
-//     Route::resource('productos', ProductoController::class);
-
-//     Route::post('productos/{producto}/opciones', [ProductoController::class, 'agregarOpcion'])
-//         ->name('productos.opciones.store');
-// });
 Route::resourceParameters([
     'cotizaciones' => 'cotizacion',
     'productos' => 'producto',

@@ -44,7 +44,7 @@
                             class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">{{ old('descripcion') }}</textarea>
                     </div>
 
-                    {{-- ✅ FOTO --}}
+                    {{-- FOTO --}}
                     <div class="md:col-span-2">
                         <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Foto del producto</label>
 

@@ -215,4 +215,27 @@ class CotizacionController extends Controller
             'total_costo' => $totalCosto,
         ]);
     }
+
+       // ✅ ELIMINAR COTIZACIÓN COMPLETA (con sus líneas + adiciones)
+    public function destroy(Cotizacion $cotizacion)
+    {
+        DB::transaction(function () use ($cotizacion) {
+            // borrar adiciones de cada item
+            CotizacionItemOpcion::whereIn(
+                'cotizacionitem_id',
+                CotizacionItem::where('cotizacion_id', $cotizacion->id)->pluck('id')
+            )->delete();
+
+            // borrar items
+            CotizacionItem::where('cotizacion_id', $cotizacion->id)->delete();
+
+            // borrar cotización
+            $cotizacion->delete();
+        });
+
+        return redirect()
+            ->route('admin.cotizaciones.index')
+            ->with('success', 'Cotización eliminada correctamente.');
+    }
+
 }
