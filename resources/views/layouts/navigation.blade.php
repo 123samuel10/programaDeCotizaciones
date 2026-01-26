@@ -149,6 +149,8 @@
                 <x-responsive-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
                     Clientes
                 </x-responsive-nav-link>
+
+
             @else
                 <x-responsive-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
                     Mis cotizaciones

@@ -16,124 +16,187 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
             @if(session('success'))
-                <div class="mb-6 p-4 rounded-xl bg-green-50 text-green-800 border border-green-200 dark:bg-green-900/30 dark:text-green-100 dark:border-green-900">
+                <div class="mb-6 p-4 rounded-xl bg-green-50 text-green-800 border border-green-200
+                            dark:bg-green-900/30 dark:text-green-100 dark:border-green-900">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200 dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
+                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200
+                            dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
                     {{ session('error') }}
                 </div>
             @endif
 
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
-                <div class="overflow-x-auto">
+            {{-- Card principal --}}
+            <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+
+                {{-- Toolbar (buscar + contador) --}}
+                <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-700 ring-1 ring-gray-200
+                                     dark:bg-gray-700/60 dark:text-gray-200 dark:ring-gray-600">
+                            Total: {{ $cotizaciones->count() }}
+                        </span>
+
+                        <span class="text-xs text-gray-500 dark:text-gray-400">
+                            Tip: busca por cliente, correo, estado, # o total.
+                        </span>
+                    </div>
+
+                    {{-- Búsqueda frontend --}}
+                    <div class="w-full md:w-96">
+                        <label class="sr-only" for="cotizacionSearch">Buscar cotizaciones</label>
+
+                        <div class="relative">
+                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <svg class="h-5 w-5 text-gray-400 dark:text-gray-500"
+                                     viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd"
+                                          d="M9 3a6 6 0 104.472 10.03l2.249 2.249a.75.75 0 101.06-1.06l-2.249-2.249A6 6 0 009 3zm-4.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0z"
+                                          clip-rule="evenodd" />
+                                </svg>
+                            </div>
+
+                            <input id="cotizacionSearch"
+                                   type="text"
+                                   placeholder="Buscar (cliente, email, estado, #, total)..."
+                                   class="w-full pl-10 pr-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700
+                                          bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                                          placeholder:text-gray-400 dark:placeholder:text-gray-500
+                                          focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto p-6">
                     <table class="min-w-full text-sm">
                         <thead>
-                            <tr class="text-left text-gray-600 dark:text-gray-300">
-                                <th class="py-2">#</th>
-                                <th class="py-2">Cliente</th>
-                                <th class="py-2">Estado</th>
-                                <th class="py-2">Respondida</th>
-                                <th class="py-2 text-center">Líneas</th>
-                                <th class="py-2 text-right">Total Venta</th>
-                                <th class="py-2 text-right">Acción</th>
-                            </tr>
+                        <tr class="text-left text-gray-600 dark:text-gray-300">
+                            <th class="py-2">#</th>
+                            <th class="py-2">Cliente</th>
+                            <th class="py-2">Estado</th>
+                            <th class="py-2">Respondida</th>
+                            <th class="py-2 text-center">Líneas</th>
+                            <th class="py-2 text-right">Total Venta</th>
+                            <th class="py-2 text-right">Acción</th>
+                        </tr>
                         </thead>
 
-                        <tbody>
-                            @forelse($cotizaciones as $c)
-                                @php
-                                    $estado = $c->estado ?? 'pendiente';
-                                    $badge = match($estado) {
-                                        'aceptada' => 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20',
-                                        'rechazada' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
-                                        default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
-                                    };
-                                @endphp
+                        <tbody id="cotizacionesTbody">
+                        @forelse($cotizaciones as $c)
+                            @php
+                                $estado = $c->estado ?? 'pendiente';
+                                $badge = match($estado) {
+                                    'aceptada' => 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20',
+                                    'rechazada' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
+                                    default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
+                                };
 
-                                <tr class="border-t dark:border-gray-700 align-top">
-                                    <td class="py-3 font-semibold text-gray-900 dark:text-gray-100">
-                                        {{ $c->id }}
-                                    </td>
+                                $clienteNombre = $c->usuario->name ?? '—';
+                                $clienteEmail  = $c->usuario->email ?? '';
+                                $respondidaTxt = $c->respondida_en ? \Carbon\Carbon::parse($c->respondida_en)->format('Y-m-d H:i') : '—';
+                                $lineas        = $c->items_count ?? $c->items()->count();
+                                $totalVenta    = (float) $c->total_venta;
 
-                                    <td class="py-3">
-                                        <div class="text-gray-900 dark:text-gray-100 font-semibold">
-                                            {{ $c->usuario->name ?? '—' }}
+                                // texto para búsqueda (frontend)
+                                $searchText = strtolower(
+                                    $c->id.' '.
+                                    $clienteNombre.' '.
+                                    $clienteEmail.' '.
+                                    $estado.' '.
+                                    $respondidaTxt.' '.
+                                    $lineas.' '.
+                                    number_format($totalVenta, 2, ',', '.')
+                                );
+                            @endphp
+
+                            <tr class="border-t dark:border-gray-700 align-top hover:bg-gray-50/60 dark:hover:bg-gray-900/30 transition"
+                                data-row-search="{{ $searchText }}">
+
+                                <td class="py-3 font-semibold text-gray-900 dark:text-gray-100">
+                                    {{ $c->id }}
+                                </td>
+
+                                <td class="py-3">
+                                    <div class="text-gray-900 dark:text-gray-100 font-semibold">
+                                        {{ $clienteNombre }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 break-words">
+                                        {{ $clienteEmail }}
+                                    </div>
+
+                                    @if($c->nota_cliente)
+                                        <div class="mt-2 text-xs p-2 rounded-xl bg-gray-50 dark:bg-gray-900/30 border dark:border-gray-700 text-gray-700 dark:text-gray-200">
+                                            <span class="font-semibold">Nota:</span> {{ $c->nota_cliente }}
                                         </div>
-                                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            {{ $c->usuario->email ?? '' }}
-                                        </div>
+                                    @endif
+                                </td>
 
-                                        @if($c->nota_cliente)
-                                            <div class="mt-2 text-xs p-2 rounded-xl bg-gray-50 dark:bg-gray-900/30 border dark:border-gray-700 text-gray-700 dark:text-gray-200">
-                                                <span class="font-semibold">Nota:</span> {{ $c->nota_cliente }}
-                                            </div>
-                                        @endif
-                                    </td>
+                                <td class="py-3">
+                                    <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 inline-flex {{ $badge }}">
+                                        {{ strtoupper($estado) }}
+                                    </span>
+                                </td>
 
-                                    <td class="py-3">
-                                        <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 inline-flex {{ $badge }}">
-                                            {{ strtoupper($estado) }}
-                                        </span>
-                                    </td>
+                                <td class="py-3 text-gray-700 dark:text-gray-200">
+                                    {{ $respondidaTxt }}
+                                </td>
 
-                                    <td class="py-3 text-gray-700 dark:text-gray-200">
-                                        @if($c->respondida_en)
-                                            {{ \Carbon\Carbon::parse($c->respondida_en)->format('Y-m-d H:i') }}
-                                        @else
-                                            —
-                                        @endif
-                                    </td>
+                                <td class="py-3 text-center">
+                                    {{ $lineas }}
+                                </td>
 
-                                    <td class="py-3 text-center">
-                                        {{ $c->items_count ?? $c->items()->count() }}
-                                    </td>
+                                <td class="py-3 text-right text-gray-900 dark:text-gray-100 font-extrabold">
+                                    ${{ number_format($totalVenta, 2, ',', '.') }}
+                                </td>
 
-                                    <td class="py-3 text-right text-gray-900 dark:text-gray-100">
-                                        ${{ number_format((float) $c->total_venta, 2, ',', '.') }}
-                                    </td>
+                                <td class="py-3 text-right">
+                                    <div class="inline-flex items-center gap-3">
+                                        <a class="text-blue-600 hover:underline font-semibold"
+                                           href="{{ route('admin.cotizaciones.edit', $c->id) }}">
+                                            Abrir
+                                        </a>
 
-                                    <td class="py-3 text-right">
-                                        <div class="inline-flex items-center gap-3">
-                                            <a class="text-blue-600 hover:underline font-semibold"
-                                               href="{{ route('admin.cotizaciones.edit', $c->id) }}">
-                                                Abrir
-                                            </a>
+                                        <form method="POST"
+                                              action="{{ route('admin.cotizaciones.destroy', $c->id) }}"
+                                              class="inline js-delete-quote-form"
+                                              data-id="{{ $c->id }}"
+                                              data-cliente="{{ $clienteNombre }}"
+                                              data-email="{{ $clienteEmail }}"
+                                              data-lineas="{{ $lineas }}">
+                                            @csrf
+                                            @method('DELETE')
 
-                                            <form method="POST"
-                                                  action="{{ route('admin.cotizaciones.destroy', $c->id) }}"
-                                                  class="inline js-delete-quote-form"
-                                                  data-id="{{ $c->id }}"
-                                                  data-cliente="{{ $c->usuario->name ?? '—' }}"
-                                                  data-email="{{ $c->usuario->email ?? '' }}"
-                                                  data-lineas="{{ $c->items_count ?? $c->items()->count() }}">
-                                                @csrf
-                                                @method('DELETE')
-
-                                                <button type="button"
-                                                        class="text-red-600 hover:underline font-semibold js-open-delete-quote">
-                                                    Eliminar
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr class="border-t dark:border-gray-700">
-                                    <td colspan="7" class="py-8 text-center text-gray-600 dark:text-gray-300">
-                                        No hay cotizaciones aún.
-                                    </td>
-                                </tr>
-                            @endforelse
+                                            <button type="button"
+                                                    class="text-red-600 hover:underline font-semibold js-open-delete-quote">
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="border-t dark:border-gray-700">
+                                <td colspan="7" class="py-8 text-center text-gray-600 dark:text-gray-300">
+                                    No hay cotizaciones aún.
+                                </td>
+                            </tr>
+                        @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                {{-- Footer --}}
+                <div class="p-4 border-t border-gray-100 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                    Consejo: usa estados (pendiente/aceptada/rechazada) para control rápido del CRM.
                 </div>
             </div>
 
         </div>
     </div>
+
     {{-- ✅ MODAL ELIMINAR COTIZACIÓN --}}
     <div id="deleteQuoteModal"
          class="fixed inset-0 z-50 hidden"
@@ -200,77 +263,94 @@
         </div>
     </div>
 
-    {{-- ✅ SCRIPT MODAL --}}
+    {{-- ✅ SCRIPTS (buscar + modal) --}}
     <script>
-    (function () {
-        const modal = document.getElementById('deleteQuoteModal');
-        const panel = document.getElementById('deleteQuotePanel');
-        const backdrop = document.getElementById('deleteQuoteBackdrop');
+        (function () {
+            // ===== Buscar =====
+            const search = document.getElementById('cotizacionSearch');
+            const rows = Array.from(document.querySelectorAll('#cotizacionesTbody tr[data-row-search]'));
 
-        const dqId = document.getElementById('dqId');
-        const dqCliente = document.getElementById('dqCliente');
-        const dqEmail = document.getElementById('dqEmail');
-        const dqLineas = document.getElementById('dqLineas');
+            function normalize(v) { return (v || '').toString().toLowerCase().trim(); }
 
-        const cancelBtn = document.getElementById('dqCancel');
-        const confirmBtn = document.getElementById('dqConfirm');
+            if (search) {
+                search.addEventListener('input', () => {
+                    const q = normalize(search.value);
+                    rows.forEach(r => {
+                        const hay = r.getAttribute('data-row-search') || '';
+                        r.classList.toggle('hidden', q && !hay.includes(q));
+                    });
+                });
+            }
 
-        let currentForm = null;
+            // ===== Modal eliminar =====
+            const modal = document.getElementById('deleteQuoteModal');
+            const panel = document.getElementById('deleteQuotePanel');
+            const backdrop = document.getElementById('deleteQuoteBackdrop');
 
-        function openModal(form) {
-            currentForm = form;
+            const dqId = document.getElementById('dqId');
+            const dqCliente = document.getElementById('dqCliente');
+            const dqEmail = document.getElementById('dqEmail');
+            const dqLineas = document.getElementById('dqLineas');
 
-            dqId.textContent = '#' + (form.dataset.id || '—');
-            dqCliente.textContent = form.dataset.cliente || '—';
-            dqEmail.textContent = form.dataset.email || '';
-            dqLineas.textContent = form.dataset.lineas || '0';
+            const cancelBtn = document.getElementById('dqCancel');
+            const confirmBtn = document.getElementById('dqConfirm');
 
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Sí, eliminar';
+            let currentForm = null;
 
-            modal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
+            function openModal(form) {
+                currentForm = form;
 
-            requestAnimationFrame(() => {
-                panel.classList.remove('scale-95', 'opacity-0');
-                panel.classList.add('scale-100', 'opacity-100');
+                dqId.textContent = '#' + (form.dataset.id || '—');
+                dqCliente.textContent = form.dataset.cliente || '—';
+                dqEmail.textContent = form.dataset.email || '';
+                dqLineas.textContent = form.dataset.lineas || '0';
+
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Sí, eliminar';
+
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+
+                requestAnimationFrame(() => {
+                    panel.classList.remove('scale-95', 'opacity-0');
+                    panel.classList.add('scale-100', 'opacity-100');
+                });
+
+                cancelBtn.focus();
+            }
+
+            function closeModal() {
+                panel.classList.remove('scale-100', 'opacity-100');
+                panel.classList.add('scale-95', 'opacity-0');
+
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                    currentForm = null;
+                }, 160);
+            }
+
+            document.querySelectorAll('.js-open-delete-quote').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const form = e.currentTarget.closest('form');
+                    openModal(form);
+                });
             });
 
-            cancelBtn.focus();
-        }
+            cancelBtn.addEventListener('click', closeModal);
+            backdrop.addEventListener('click', closeModal);
 
-        function closeModal() {
-            panel.classList.remove('scale-100', 'opacity-100');
-            panel.classList.add('scale-95', 'opacity-0');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-                currentForm = null;
-            }, 160);
-        }
-
-        document.querySelectorAll('.js-open-delete-quote').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const form = e.currentTarget.closest('form');
-                openModal(form);
+            confirmBtn.addEventListener('click', () => {
+                if (!currentForm) return;
+                confirmBtn.disabled = true;
+                confirmBtn.textContent = 'Eliminando...';
+                currentForm.submit();
             });
-        });
 
-        cancelBtn.addEventListener('click', closeModal);
-        backdrop.addEventListener('click', closeModal);
-
-        confirmBtn.addEventListener('click', () => {
-            if (!currentForm) return;
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Eliminando...';
-            currentForm.submit();
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (modal.classList.contains('hidden')) return;
-            if (e.key === 'Escape') closeModal();
-        });
-    })();
+            document.addEventListener('keydown', (e) => {
+                if (modal.classList.contains('hidden')) return;
+                if (e.key === 'Escape') closeModal();
+            });
+        })();
     </script>
 </x-app-layout>

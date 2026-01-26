@@ -172,7 +172,7 @@
                 </div>
             </div>
 
-            {{-- ✅ MODAL PROFESIONAL (UNA SOLA VEZ) --}}
+            {{-- MODAL PROFESIONAL (UNA SOLA VEZ) --}}
             <div id="deleteModal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
                 {{-- Backdrop --}}
                 <div id="deleteBackdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
@@ -248,7 +248,7 @@
                 </div>
             </div>
 
-            {{-- ✅ JS (búsqueda + modal con animación + loading) --}}
+            {{-- JS (búsqueda + modal con animación + loading) --}}
             <script>
                 (function () {
                     // ===== Buscar =====

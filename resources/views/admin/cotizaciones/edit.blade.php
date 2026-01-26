@@ -46,6 +46,7 @@
                         <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Producto</label>
                         <select name="producto_id" class="w-full rounded-xl dark:bg-gray-900 dark:text-gray-100">
                             @foreach($productos as $p)
+                                @continue(in_array($p->id, $productosAgregadosIds ?? []))
                                 <option value="{{ $p->id }}">
                                     {{ $p->marca }} - {{ $p->modelo }} ({{ $p->nombre_producto }})
                                 </option>
@@ -116,16 +117,23 @@
                                         </button>
                                     </form>
 
-                                    {{--  Eliminar línea --}}
-                                    <form method="POST"
-                                          action="{{ route('admin.cotizaciones.items.destroy', [$cotizacion->id, $item->id]) }}"
-                                          onsubmit="return confirm('¿Eliminar esta línea?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white">
-                                            Eliminar línea
-                                        </button>
-                                    </form>
+                                    {{-- Eliminar línea (BOTÓN PRO + MODAL) --}}
+                                    <button type="button"
+                                            x-data
+                                            x-on:click="$dispatch('open-delete-modal', {
+                                                action: '{{ route('admin.cotizaciones.items.destroy', [$cotizacion->id, $item->id]) }}',
+                                                titulo: 'Eliminar línea de cotización',
+                                                detalle: 'Se eliminará: {{ addslashes($producto->nombre_producto ?? 'Producto') }}. Esta acción no se puede deshacer.'
+                                            })"
+                                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                                                   bg-red-600 hover:bg-red-700 text-white font-semibold
+                                                   shadow-sm hover:shadow transition">
+                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862A2 2 0 015.867 19.142L5 7m5 4v6m4-6v6M9 7h6m-7 0V5a2 2 0 012-2h4a2 2 0 012 2v2" />
+                                        </svg>
+                                        Eliminar línea
+                                    </button>
                                 </div>
                             </div>
 
@@ -175,33 +183,33 @@
                                 <div class="mt-4 overflow-x-auto">
                                     <table class="min-w-full text-sm">
                                         <thead>
-                                            <tr class="text-left text-gray-600 dark:text-gray-300">
-                                                <th class="py-2">Opción</th>
-                                                <th class="py-2 text-right">Cantidad</th>
-                                                <th class="py-2 text-right">Subtotal Venta</th>
-                                                <th class="py-2 text-right">Subtotal Costo</th>
-                                                <th class="py-2"></th>
-                                            </tr>
+                                        <tr class="text-left text-gray-600 dark:text-gray-300">
+                                            <th class="py-2">Opción</th>
+                                            <th class="py-2 text-right">Cantidad</th>
+                                            <th class="py-2 text-right">Subtotal Venta</th>
+                                            <th class="py-2 text-right">Subtotal Costo</th>
+                                            <th class="py-2"></th>
+                                        </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($item->opciones as $op)
-                                                <tr class="border-t dark:border-gray-700">
-                                                    <td class="py-2 font-semibold text-gray-900 dark:text-gray-100">
-                                                        {{ $op->opcion->nombre ?? '—' }}
-                                                    </td>
-                                                    <td class="py-2 text-right">{{ $op->cantidad }}</td>
-                                                    <td class="py-2 text-right">${{ number_format($op->subtotal_venta, 2, ',', '.') }}</td>
-                                                    <td class="py-2 text-right">${{ number_format($op->subtotal_costo, 2, ',', '.') }}</td>
-                                                    <td class="py-2 text-right">
-                                                        <form method="POST"
-                                                              action="{{ route('admin.cotizaciones.items.opciones.destroy', [$cotizacion->id, $item->id, $op->id]) }}">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button class="text-red-600 hover:underline">Eliminar</button>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
+                                        @foreach($item->opciones as $op)
+                                            <tr class="border-t dark:border-gray-700">
+                                                <td class="py-2 font-semibold text-gray-900 dark:text-gray-100">
+                                                    {{ $op->opcion->nombre ?? '—' }}
+                                                </td>
+                                                <td class="py-2 text-right">{{ $op->cantidad }}</td>
+                                                <td class="py-2 text-right">${{ number_format($op->subtotal_venta, 2, ',', '.') }}</td>
+                                                <td class="py-2 text-right">${{ number_format($op->subtotal_costo, 2, ',', '.') }}</td>
+                                                <td class="py-2 text-right">
+                                                    <form method="POST"
+                                                          action="{{ route('admin.cotizaciones.items.opciones.destroy', [$cotizacion->id, $item->id, $op->id]) }}">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button class="text-red-600 hover:underline">Eliminar</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -241,4 +249,96 @@
 
         </div>
     </div>
+
+    {{-- MODAL PRO GLOBAL (Eliminar línea) --}}
+    <div
+        x-data="{
+            open:false,
+            action:'',
+            titulo:'Eliminar',
+            detalle:'',
+            abrir(payload){
+                this.action = payload.action || '';
+                this.titulo = payload.titulo || 'Confirmar eliminación';
+                this.detalle = payload.detalle || 'Esta acción no se puede deshacer.';
+                this.open = true;
+                this.$nextTick(() => this.$refs.btnCancelar?.focus());
+            }
+        }"
+        x-on:open-delete-modal.window="abrir($event.detail)"
+        x-on:keydown.escape.window="open=false"
+        x-cloak
+    >
+        {{-- Backdrop --}}
+        <div
+            x-show="open"
+            x-transition.opacity
+            class="fixed inset-0 bg-black/55 backdrop-blur-sm z-50"
+            x-on:click="open=false"
+        ></div>
+
+        {{-- Modal --}}
+        <div
+            x-show="open"
+            x-transition
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+        >
+            <div class="w-full max-w-md rounded-2xl bg-white dark:bg-gray-900 shadow-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                {{-- Header --}}
+                <div class="p-5 border-b border-gray-100 dark:border-gray-800">
+                    <div class="flex items-start gap-4">
+                        <div class="shrink-0 w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
+                            <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M12 9v3m0 4h.01M10.29 3.86l-8.02 14A2 2 0 004 21h16a2 2 0 001.73-3.14l-8.02-14a2 2 0 00-3.46 0z"/>
+                            </svg>
+                        </div>
+
+                        <div class="min-w-0">
+                            <h3 class="text-lg font-extrabold text-gray-900 dark:text-gray-100" x-text="titulo"></h3>
+                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300" x-text="detalle"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Body --}}
+                <div class="p-5">
+                    <div class="rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-800 p-4">
+                        <p class="text-sm text-gray-700 dark:text-gray-200">
+                            Si continúas, se eliminará la línea y sus adiciones asociadas (si aplica).
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div class="p-5 pt-0 flex gap-3">
+                    <button
+                        type="button"
+                        x-ref="btnCancelar"
+                        x-on:click="open=false"
+                        class="flex-1 px-4 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200
+                               dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 font-semibold transition"
+                    >
+                        Cancelar
+                    </button>
+
+                    <form class="flex-1" method="POST" x-bind:action="action">
+                        @csrf
+                        @method('DELETE')
+                        <button
+                            type="submit"
+                            class="w-full px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700
+                                   text-white font-extrabold shadow-sm hover:shadow transition
+                                   focus:outline-none focus:ring-2 focus:ring-red-500/40"
+                        >
+                            Sí, eliminar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </x-app-layout>

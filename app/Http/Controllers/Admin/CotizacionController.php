@@ -17,7 +17,7 @@ use App\Models\CotizacionItemOpcion;
 
 class CotizacionController extends Controller
 {
-  // 🔒 Seguridad SIN middleware
+  // Seguridad SIN middleware
     private function validarAdmin()
     {
         $user = Auth::user();
@@ -33,7 +33,7 @@ class CotizacionController extends Controller
         return $user;
     }
 
-    // 🔒 Bloqueo si el cliente ya respondió
+    // Bloqueo si el cliente ya respondió
     private function asegurarPendiente(Cotizacion $cotizacion): void
     {
         $estado = $cotizacion->estado ?? 'pendiente';
@@ -105,35 +105,53 @@ class CotizacionController extends Controller
         $cotizacion->refresh();
 
         $productos = Producto::latest()->get();
-
-        return view('admin.cotizaciones.edit', compact('cotizacion', 'productos'));
+$productosAgregadosIds = $cotizacion->items->pluck('producto_id')->unique()->toArray();
+       return view('admin.cotizaciones.edit', compact('cotizacion', 'productos', 'productosAgregadosIds'));
     }
 
     // AGREGAR ITEM
-    public function agregarItem(Request $request, Cotizacion $cotizacion)
-    {
-        $this->validarAdmin();
-        $this->asegurarPendiente($cotizacion);
+    // AGREGAR ITEM
+public function agregarItem(Request $request, Cotizacion $cotizacion)
+{
+    $this->validarAdmin();
+    $this->asegurarPendiente($cotizacion);
 
-        $request->validate([
-            'producto_id' => 'required|exists:productos,id',
-            'cantidad'    => 'required|integer|min:1|max:999',
-        ]);
+    $request->validate([
+        'producto_id' => 'required|exists:productos,id',
+        'cantidad'    => 'required|integer|min:1|max:999',
+    ]);
 
-        $producto = Producto::findOrFail((int)$request->producto_id);
+    $productoId = (int) $request->producto_id;
 
-        CotizacionItem::create([
-            'cotizacion_id'     => $cotizacion->id,
-            'producto_id'       => $producto->id,
-            'cantidad'          => (int)$request->cantidad,
-            'precio_base_venta' => (float)$producto->precio_base_venta,
-            'precio_base_costo' => (float)$producto->precio_base_costo,
-        ]);
+    // Regla PRO: si ya existe esa línea, NO se crea otra. Se actualiza la cantidad.
+    $itemExistente = CotizacionItem::where('cotizacion_id', $cotizacion->id)
+        ->where('producto_id', $productoId)
+        ->first();
+
+    if ($itemExistente) {
+        $itemExistente->cantidad += (int) $request->cantidad;
+        $itemExistente->save();
 
         $this->recalcularTotales($cotizacion);
 
-        return back()->with('success', 'Producto agregado a la cotización.');
+        return back()->with('success', 'Ese producto ya estaba agregado. Se sumó la cantidad en la misma línea.');
     }
+
+    $producto = Producto::findOrFail($productoId);
+
+    CotizacionItem::create([
+        'cotizacion_id'     => $cotizacion->id,
+        'producto_id'       => $producto->id,
+        'cantidad'          => (int)$request->cantidad,
+        'precio_base_venta' => (float)$producto->precio_base_venta,
+        'precio_base_costo' => (float)$producto->precio_base_costo,
+    ]);
+
+    $this->recalcularTotales($cotizacion);
+
+    return back()->with('success', 'Producto agregado a la cotización.');
+}
+
 
     // ACTUALIZAR CANTIDAD
     public function actualizarItem(Request $request, Cotizacion $cotizacion, CotizacionItem $item)

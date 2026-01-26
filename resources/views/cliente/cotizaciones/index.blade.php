@@ -100,25 +100,73 @@
                                 <div class="rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
 
                                     {{-- Encabezado producto --}}
-                                    <div class="p-5 bg-gray-50 dark:bg-gray-900/30">
-                                        <div class="flex items-start justify-between gap-4">
-                                            <div>
-                                                <div class="font-extrabold text-gray-900 dark:text-gray-100">
-                                                    {{ $p->nombre_producto ?? 'Producto' }}
-                                                </div>
-                                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    {{ $p->marca ?? '' }} {{ $p->modelo ?? '' }}
-                                                </div>
-                                            </div>
+                            {{-- Encabezado producto (foto PRO + zoom) --}}
+<div class="p-5 bg-gray-50 dark:bg-gray-900/30">
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
 
-                                            <div class="text-right">
-                                                <div class="text-xs text-gray-500 dark:text-gray-400">Cantidad</div>
-                                                <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">
-                                                    {{ (int)$item->cantidad }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+        {{-- Izquierda: Foto + info --}}
+        <div class="flex items-start gap-4 min-w-0">
+            {{-- FOTO (grande y bonita) --}}
+            <button type="button"
+                    class="shrink-0 group"
+                    @if($p && $p->foto)
+                        onclick="openProductImageModal('{{ asset('storage/'.$p->foto) }}','{{ e($p->nombre_producto ?? 'Producto') }}','{{ e(($p->marca ?? '').' '.($p->modelo ?? '')) }}')"
+                    @else
+                        onclick="openProductImageModal('', 'Sin foto', '')"
+                    @endif
+            >
+                <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+                    @if($p && $p->foto)
+                        <img src="{{ asset('storage/'.$p->foto) }}"
+                             alt="Foto {{ $p->nombre_producto ?? 'Producto' }}"
+                             class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                             loading="lazy">
+                    @else
+                        <div class="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                            Sin foto
+                        </div>
+                    @endif
+                </div>
+
+                <div class="mt-2 text-[11px] text-gray-500 dark:text-gray-400 text-center">
+                    @if($p && $p->foto) Click para ampliar @endif
+                </div>
+            </button>
+
+            {{-- INFO --}}
+            <div class="min-w-0">
+                <div class="font-extrabold text-gray-900 dark:text-gray-100 text-base sm:text-lg break-words">
+                    {{ $p->nombre_producto ?? 'Producto' }}
+                </div>
+
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 break-words">
+                    {{ $p->marca ?? '' }} {{ $p->modelo ?? '' }}
+                </div>
+
+                {{-- Chips (se ve pro) --}}
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <span class="text-xs font-bold px-3 py-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200">
+                        Cantidad: {{ (int)$item->cantidad }}
+                    </span>
+
+                    <span class="text-xs font-bold px-3 py-1 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200">
+                        Total línea: ${{ number_format($totalLinea, 2, ',', '.') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Derecha: Cantidad (extra) --}}
+        <div class="text-right shrink-0">
+            <div class="text-xs text-gray-500 dark:text-gray-400">Cantidad</div>
+            <div class="text-2xl font-extrabold text-gray-900 dark:text-gray-100">
+                {{ (int)$item->cantidad }}
+            </div>
+        </div>
+
+    </div>
+</div>
+
 
                                     {{-- Total de esa línea (sin mostrar unitarios) --}}
                                     <div class="p-5">
@@ -262,4 +310,110 @@
 
         </div>
     </div>
+
+
+
+
+
+    {{-- ✅ MODAL ZOOM IMAGEN PRODUCTO (CLIENTE) --}}
+<div id="productImageModal"
+     class="fixed inset-0 z-50 hidden"
+     aria-labelledby="productImageTitle"
+     aria-modal="true"
+     role="dialog">
+
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeProductImageModal()"></div>
+
+    <div class="relative min-h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-2xl overflow-hidden
+                    transform transition-all duration-200 scale-95 opacity-0"
+             id="productImagePanel">
+
+            {{-- Header --}}
+            <div class="p-5 border-b border-gray-100 dark:border-gray-800 flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <h3 id="productImageTitle" class="text-lg font-extrabold text-gray-900 dark:text-gray-100 truncate">
+                        —
+                    </h3>
+                    <p id="productImageSub" class="text-sm text-gray-600 dark:text-gray-300 truncate">
+                        —
+                    </p>
+                </div>
+
+                <button type="button"
+                        onclick="closeProductImageModal()"
+                        class="shrink-0 w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700
+                               flex items-center justify-center text-gray-700 dark:text-gray-200">
+                    ✕
+                </button>
+            </div>
+
+            {{-- Imagen --}}
+            <div class="p-5">
+                <div class="rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-black/5 dark:bg-white/5">
+                    <img id="productImageTag"
+                         src=""
+                         alt=""
+                         class="w-full max-h-[70vh] object-contain bg-white dark:bg-gray-900">
+                </div>
+
+                <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                    Tip: si estás en celular, puedes hacer zoom con los dedos.
+                </p>
+            </div>
+
+            {{-- Footer --}}
+            <div class="p-5 pt-0 flex justify-end">
+                <button type="button"
+                        onclick="closeProductImageModal()"
+                        class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        const modal = document.getElementById('productImageModal');
+        const panel = document.getElementById('productImagePanel');
+        const img = document.getElementById('productImageTag');
+        const title = document.getElementById('productImageTitle');
+        const sub = document.getElementById('productImageSub');
+
+        window.openProductImageModal = function(url, t, s){
+            title.textContent = t || 'Producto';
+            sub.textContent = s || '';
+            img.src = url || '';
+            img.alt = t || 'Producto';
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+
+            requestAnimationFrame(() => {
+                panel.classList.remove('scale-95', 'opacity-0');
+                panel.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        window.closeProductImageModal = function(){
+            panel.classList.remove('scale-100', 'opacity-100');
+            panel.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                img.src = '';
+            }, 160);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (modal.classList.contains('hidden')) return;
+            if (e.key === 'Escape') window.closeProductImageModal();
+        });
+    })();
+</script>
+
 </x-app-layout>

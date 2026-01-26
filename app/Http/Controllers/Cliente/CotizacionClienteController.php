@@ -14,7 +14,7 @@ use App\Models\Venta;
 
 class CotizacionClienteController extends Controller
 {
-    // 🔒 Seguridad SIN middleware
+    // Seguridad SIN middleware
     private function validarCliente()
     {
         $user = Auth::user();
@@ -37,7 +37,7 @@ class CotizacionClienteController extends Controller
         }
     }
 
-    // 📋 Listado / notificaciones
+    // Listado / notificaciones
     public function index()
     {
         $user = $this->validarCliente();
@@ -141,7 +141,7 @@ class CotizacionClienteController extends Controller
 
 
 
-    // ❌ Rechazar
+    // Rechazar
     public function rechazar(Request $request, Cotizacion $cotizacion)
     {
         $user = $this->validarCliente();

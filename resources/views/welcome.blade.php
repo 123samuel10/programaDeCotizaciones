@@ -19,68 +19,99 @@
 
     <!-- Contenido -->
     <div class="relative flex min-h-screen items-center justify-center px-6 py-12">
-        <div class="w-full max-w-5xl">
+        <div class="w-full max-w-6xl">
 
             <!-- Card principal -->
-            <div class="rounded-3xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl ring-1 ring-gray-200/70 dark:ring-gray-700/60 overflow-hidden">
+            <div class="rounded-3xl bg-white/80 dark:bg-gray-800/60 backdrop-blur-xl shadow-xl
+                        ring-1 ring-gray-200/70 dark:ring-gray-700/60 overflow-hidden">
 
-                <div class="p-8 sm:p-12">
+                <div class="p-10 sm:p-14">
 
-                    <!-- Marca -->
-                    <div class="text-center mb-6">
-                        <span class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700
-                                     dark:bg-blue-500/10 dark:text-blue-300 ring-1 ring-blue-100 dark:ring-blue-500/20">
-                            Heral Enterprises
+                    <!-- ================= MARCA ================= -->
+                    <div class="text-center mb-12">
+
+                        <!-- Logo horizontal grande -->
+                        <div class="flex justify-center mb-6">
+                            <img src="{{ asset('images/Logo_Heral.jpeg') }}"
+                                 alt="Logo Heral Enterprises"
+                                 class="max-w-[320px] sm:max-w-[420px] md:max-w-[480px]
+                                        h-auto object-contain drop-shadow-xl"
+                                 loading="lazy">
+                        </div>
+
+                        <!-- Submarca -->
+                        <span class="inline-flex items-center rounded-full
+                                     bg-blue-50 px-5 py-2 text-sm font-semibold text-blue-700
+                                     ring-1 ring-blue-100
+                                     dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/20">
+                            Plataforma de gestión de cotizaciones, productos y ventas
                         </span>
                     </div>
 
-                    <!-- Título -->
-                    <div class="text-center">
-                        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                           CRM:Heral Enterprises
-                        </h1>
+                    <!-- ================= TÍTULO ================= -->
+                    <div class="text-center max-w-3xl mx-auto">
+                     <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight
+           text-gray-900 dark:text-white">
+     Heral Enterprises
+</h1>
 
-                        <p class="mt-4 text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                            Plataforma profesional de <strong>Heral Enterprises</strong> para la gestión de
-                            cotizaciones, productos, costos y ventas de forma clara y segura.
+                        <p class="mt-6 text-base sm:text-lg text-gray-600 dark:text-gray-300">
+                            Plataforma profesional para la gestión de
+                            <strong>cotizaciones</strong>, <strong>productos</strong>,
+                            <strong>costos</strong> y <strong>ventas</strong>,
+                            diseñada para trabajar de forma clara, segura y eficiente.
                         </p>
                     </div>
 
-                    <!-- Botones -->
-                    <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <!-- ================= BOTONES ================= -->
+                    <div class="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
                         <a href="{{ route('login') }}"
-                           class="w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-6 py-3 font-semibold text-white
-                                  bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg hover:from-blue-700 hover:to-blue-800 transition">
-                            Iniciar Sesión
+                           class="w-full sm:w-auto inline-flex items-center justify-center
+                                  rounded-xl px-8 py-3 font-bold text-white
+                                  bg-gradient-to-r from-blue-600 to-blue-700
+                                  shadow-lg hover:from-blue-700 hover:to-blue-800 transition">
+                            Iniciar sesión
                         </a>
 
                         <a href="{{ route('register') }}"
-                           class="w-full sm:w-auto inline-flex items-center justify-center rounded-xl px-6 py-3 font-semibold
-                                  text-gray-800 bg-gray-100 ring-1 ring-gray-200 hover:bg-gray-200 transition
-                                  dark:text-gray-100 dark:bg-gray-700/60 dark:ring-gray-600 dark:hover:bg-gray-700">
+                           class="w-full sm:w-auto inline-flex items-center justify-center
+                                  rounded-xl px-8 py-3 font-bold
+                                  text-gray-800 bg-gray-100 ring-1 ring-gray-200
+                                  hover:bg-gray-200 transition
+                                  dark:text-gray-100 dark:bg-gray-700/60
+                                  dark:ring-gray-600 dark:hover:bg-gray-700">
                             Registrarse
                         </a>
                     </div>
 
-                    <!-- Beneficios -->
-                    <div class="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="rounded-2xl bg-white/70 dark:bg-gray-900/30 p-5 ring-1 ring-gray-200/70 dark:ring-gray-700/60">
-                            <h3 class="font-bold text-gray-900 dark:text-white">Cotizaciones profesionales</h3>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                    <!-- ================= BENEFICIOS ================= -->
+                    <div class="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div class="rounded-2xl bg-white/70 dark:bg-gray-900/30 p-6
+                                    ring-1 ring-gray-200/70 dark:ring-gray-700/60">
+                            <h3 class="font-bold text-gray-900 dark:text-white">
+                                Cotizaciones profesionales
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                                 Totales claros de venta y costo, con adiciones por producto.
                             </p>
                         </div>
 
-                        <div class="rounded-2xl bg-white/70 dark:bg-gray-900/30 p-5 ring-1 ring-gray-200/70 dark:ring-gray-700/60">
-                            <h3 class="font-bold text-gray-900 dark:text-white">Gestión centralizada</h3>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                        <div class="rounded-2xl bg-white/70 dark:bg-gray-900/30 p-6
+                                    ring-1 ring-gray-200/70 dark:ring-gray-700/60">
+                            <h3 class="font-bold text-gray-900 dark:text-white">
+                                Gestión centralizada
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                                 Administra productos, clientes y cotizaciones desde un solo lugar.
                             </p>
                         </div>
 
-                        <div class="rounded-2xl bg-white/70 dark:bg-gray-900/30 p-5 ring-1 ring-gray-200/70 dark:ring-gray-700/60">
-                            <h3 class="font-bold text-gray-900 dark:text-white">Acceso seguro</h3>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                        <div class="rounded-2xl bg-white/70 dark:bg-gray-900/30 p-6
+                                    ring-1 ring-gray-200/70 dark:ring-gray-700/60">
+                            <h3 class="font-bold text-gray-900 dark:text-white">
+                                Acceso seguro
+                            </h3>
+                            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
                                 Roles definidos para administradores y clientes.
                             </p>
                         </div>
@@ -88,11 +119,13 @@
 
                 </div>
 
-                <!-- Footer -->
-                <div class="px-8 sm:px-12 py-4 bg-gray-50/70 dark:bg-gray-900/30 border-t border-gray-200/60 dark:border-gray-700/60">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <!-- ================= FOOTER ================= -->
+                <div class="px-10 sm:px-14 py-4 bg-gray-50/70 dark:bg-gray-900/30
+                            border-t border-gray-200/60 dark:border-gray-700/60">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-2
+                                text-xs text-gray-500 dark:text-gray-400">
                         <span>© {{ date('Y') }} Heral Enterprises</span>
-                        <span>CRM</span>
+                        <span>Plataforma de gestión de cotizaciones, productos y ventas</span>
                     </div>
                 </div>
 

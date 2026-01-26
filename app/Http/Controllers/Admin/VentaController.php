@@ -11,7 +11,7 @@ use App\Models\Venta;
 use Illuminate\Support\Facades\Auth;
 class VentaController extends Controller
 {
-  // 🔒 Seguridad SIN middleware
+  // Seguridad SIN middleware
     private function validarAdmin()
     {
         $user = Auth::user();
