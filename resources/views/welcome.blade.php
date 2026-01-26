@@ -37,7 +37,7 @@
                     <!-- Título -->
                     <div class="text-center">
                         <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-                            Programa de Cotizaciones
+                           CRM:Heral Enterprises
                         </h1>
 
                         <p class="mt-4 text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
@@ -92,7 +92,7 @@
                 <div class="px-8 sm:px-12 py-4 bg-gray-50/70 dark:bg-gray-900/30 border-t border-gray-200/60 dark:border-gray-700/60">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
                         <span>© {{ date('Y') }} Heral Enterprises</span>
-                        <span>Programa de Cotizaciones</span>
+                        <span>CRM</span>
                     </div>
                 </div>
 

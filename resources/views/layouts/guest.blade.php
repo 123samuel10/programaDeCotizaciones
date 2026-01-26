@@ -21,7 +21,7 @@
             Heral <span class="text-blue-600 dark:text-blue-400">Enterprises</span>
         </div>
         <div class="text-sm text-gray-500 dark:text-gray-400">
-            Programa de Cotizaciones
+            CRM: Heral Enterprises
         </div>
     </a>
 
