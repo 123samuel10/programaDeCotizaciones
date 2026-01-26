@@ -27,11 +27,16 @@
                             Cotizaciones
                         </x-nav-link>
 
+                        {{-- ✅ NUEVO: Ventas --}}
+                        <x-nav-link :href="route('admin.ventas.index')" :active="request()->routeIs('admin.ventas.*')">
+                            Ventas
+                        </x-nav-link>
+
                         <x-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
                             Clientes
                         </x-nav-link>
                     @else
-                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('usuario.*')">
+                        <x-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
                             Mis cotizaciones
                         </x-nav-link>
                     @endif
@@ -136,11 +141,16 @@
                     Cotizaciones
                 </x-responsive-nav-link>
 
+                {{-- ✅ NUEVO: Ventas --}}
+                <x-responsive-nav-link :href="route('admin.ventas.index')" :active="request()->routeIs('admin.ventas.*')">
+                    Ventas
+                </x-responsive-nav-link>
+
                 <x-responsive-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
                     Clientes
                 </x-responsive-nav-link>
             @else
-                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('usuario.*')">
+                <x-responsive-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
                     Mis cotizaciones
                 </x-responsive-nav-link>
             @endif

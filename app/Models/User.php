@@ -35,6 +35,9 @@ class User extends Authenticatable
 {
     return $this->hasMany(\App\Models\Cotizacion::class, 'user_id');
 }
-
+public function ventas()
+{
+    return $this->hasMany(\App\Models\Venta::class, 'user_id');
+}
 
 }

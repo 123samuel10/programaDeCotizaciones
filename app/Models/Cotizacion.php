@@ -37,4 +37,10 @@ public function usuario()
     return $this->belongsTo(\App\Models\User::class, 'user_id');
 }
 
+public function venta()
+{
+    return $this->hasOne(\App\Models\Venta::class, 'cotizacion_id');
+}
+
+
 }

@@ -3,7 +3,7 @@
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\CotizacionController;
 use App\Http\Controllers\Admin\ProductoController;
-
+use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -61,6 +61,13 @@ Route::prefix('admin')->as('admin.')->group(function () {
         ->name('cotizaciones.items.opciones.destroy');
 
         Route::resource('clientes', ClienteController::class);
+
+
+
+          Route::get('ventas', [VentaController::class, 'index'])->name('ventas.index');
+
+Route::get('ventas/{venta}', [VentaController::class, 'show'])->name('ventas.show');
+Route::put('ventas/{venta}', [VentaController::class, 'update'])->name('ventas.update');
 });
 
 
@@ -77,6 +84,8 @@ Route::prefix('cliente')->name('cliente.')->group(function () {
     Route::post('cotizaciones/{cotizacion}/rechazar', [CotizacionClienteController::class, 'rechazar'])
         ->name('cotizaciones.rechazar');
 });
+
+
 
 
 require __DIR__.'/auth.php';

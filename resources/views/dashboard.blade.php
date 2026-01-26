@@ -50,6 +50,13 @@
                                   dark:text-gray-100 dark:bg-gray-700/60 dark:hover:bg-gray-700">
                             Ir a productos
                         </a>
+                        <a href="{{ route('admin.ventas.index') }}"
+   class="inline-flex items-center justify-center rounded-xl px-4 py-2.5 font-bold
+          text-gray-700 bg-gray-100 hover:bg-gray-200 transition
+          dark:text-gray-100 dark:bg-gray-700/60 dark:hover:bg-gray-700">
+    Ir a ventas
+</a>
+
                     </div>
                 @endif
             </div>
@@ -77,6 +84,8 @@
                             {{ $totalCotizaciones ?? '—' }}
                         </p>
                     </div>
+
+
                 </div>
 
             @else
