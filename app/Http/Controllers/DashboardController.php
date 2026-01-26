@@ -31,7 +31,7 @@ class DashboardController extends Controller
 
 
         // CLIENTE: últimas cotizaciones del usuario
-        $misCotizaciones = Cotizacion::with(['producto'])
+        $misCotizaciones = Cotizacion::with(['items.producto'])
             ->where('user_id', $user->id)
             ->latest()
             ->take(10)

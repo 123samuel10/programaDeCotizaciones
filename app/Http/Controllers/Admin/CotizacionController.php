@@ -10,20 +10,48 @@ use App\Models\Cotizacion;
 use App\Models\Producto;
 use App\Models\User;
 use App\Models\Opcion;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\CotizacionItem;
 use App\Models\CotizacionItemOpcion;
 
 class CotizacionController extends Controller
 {
+  // 🔒 Seguridad SIN middleware
+    private function validarAdmin()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'Debes iniciar sesión.');
+        }
+
+        if (($user->role ?? null) !== 'admin') {
+            abort(403, 'Acceso solo para administradores.');
+        }
+
+        return $user;
+    }
+
+    // 🔒 Bloqueo si el cliente ya respondió
+    private function asegurarPendiente(Cotizacion $cotizacion): void
+    {
+        $estado = $cotizacion->estado ?? 'pendiente';
+        if ($estado !== 'pendiente') {
+            abort(403, 'Esta cotización ya fue respondida por el cliente y está bloqueada.');
+        }
+    }
+
     // LISTADO
     public function index()
     {
+        $this->validarAdmin();
+
         $cotizaciones = Cotizacion::with(['usuario'])
+            ->withCount('items')
             ->latest()
             ->get();
 
-        // Mostrar totales correctos (sin “copiar” opciones)
         foreach ($cotizaciones as $c) {
             $this->recalcularTotales($c);
             $c->refresh();
@@ -35,13 +63,17 @@ class CotizacionController extends Controller
     // FORM CREAR
     public function create()
     {
-        $clientes  = User::where('role', 'cliente')->orderBy('name')->get();
+        $this->validarAdmin();
+
+        $clientes = User::where('role', 'cliente')->orderBy('name')->get();
         return view('admin.cotizaciones.create', compact('clientes'));
     }
 
-    // CREAR COTIZACIÓN VACÍA (sin producto fijo)
+    // CREAR COTIZACIÓN VACÍA
     public function store(Request $request)
     {
+        $this->validarAdmin();
+
         $request->validate([
             'user_id' => 'required|exists:users,id',
         ]);
@@ -50,6 +82,7 @@ class CotizacionController extends Controller
             'user_id'     => (int) $request->user_id,
             'total_venta' => 0,
             'total_costo' => 0,
+            'estado'      => 'pendiente',
         ]);
 
         return redirect()
@@ -57,9 +90,11 @@ class CotizacionController extends Controller
             ->with('success', 'Cotización creada. Ahora agrega productos y adiciones por línea.');
     }
 
-    // EDITAR (agregar ítems y adiciones por ítem)
+    // EDITAR
     public function edit(Cotizacion $cotizacion)
     {
+        $this->validarAdmin();
+
         $cotizacion = Cotizacion::with([
             'usuario',
             'items.producto',
@@ -74,9 +109,12 @@ class CotizacionController extends Controller
         return view('admin.cotizaciones.edit', compact('cotizacion', 'productos'));
     }
 
-    // AGREGAR ITEM (producto + cantidad) a la cotización
+    // AGREGAR ITEM
     public function agregarItem(Request $request, Cotizacion $cotizacion)
     {
+        $this->validarAdmin();
+        $this->asegurarPendiente($cotizacion);
+
         $request->validate([
             'producto_id' => 'required|exists:productos,id',
             'cantidad'    => 'required|integer|min:1|max:999',
@@ -97,9 +135,12 @@ class CotizacionController extends Controller
         return back()->with('success', 'Producto agregado a la cotización.');
     }
 
-    // ACTUALIZAR CANTIDAD de una línea
+    // ACTUALIZAR CANTIDAD
     public function actualizarItem(Request $request, Cotizacion $cotizacion, CotizacionItem $item)
     {
+        $this->validarAdmin();
+        $this->asegurarPendiente($cotizacion);
+
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
 
         $request->validate([
@@ -115,9 +156,12 @@ class CotizacionController extends Controller
         return back()->with('success', 'Cantidad actualizada.');
     }
 
-    // ELIMINAR ITEM (línea completa)
+    // ELIMINAR ITEM
     public function eliminarItem(Cotizacion $cotizacion, CotizacionItem $item)
     {
+        $this->validarAdmin();
+        $this->asegurarPendiente($cotizacion);
+
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
 
         $item->delete();
@@ -126,9 +170,12 @@ class CotizacionController extends Controller
         return back()->with('success', 'Línea eliminada.');
     }
 
-    // GREGAR ADICIÓN A UN ITEM ESPECÍFICO
+    // AGREGAR ADICIÓN A ITEM
     public function agregarOpcionItem(Request $request, Cotizacion $cotizacion, CotizacionItem $item)
     {
+        $this->validarAdmin();
+        $this->asegurarPendiente($cotizacion);
+
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
 
         $request->validate([
@@ -136,7 +183,6 @@ class CotizacionController extends Controller
             'cantidad'  => 'required|integer|min:1|max:99',
         ]);
 
-        // seguridad: opción debe pertenecer al producto de ese item
         $opcion = Opcion::where('id', (int)$request->opcion_id)
             ->where('producto_id', $item->producto_id)
             ->firstOrFail();
@@ -179,9 +225,12 @@ class CotizacionController extends Controller
         return back()->with('success', 'Adición agregada a esa línea (solo a ese producto).');
     }
 
-    // ELIMINAR ADICIÓN DE UN ITEM
+    // ELIMINAR ADICIÓN DE ITEM
     public function eliminarOpcionItem(Cotizacion $cotizacion, CotizacionItem $item, CotizacionItemOpcion $op)
     {
+        $this->validarAdmin();
+        $this->asegurarPendiente($cotizacion);
+
         if ($item->cotizacion_id !== $cotizacion->id) abort(403);
         if ($op->cotizacionitem_id !== $item->id) abort(403);
 
@@ -191,7 +240,7 @@ class CotizacionController extends Controller
         return back()->with('success', 'Adición eliminada.');
     }
 
-    // RECALCULAR TOTALES (SUMA TODAS LAS LÍNEAS + SUS ADICIONES)
+    // RECALCULAR TOTALES
     private function recalcularTotales(Cotizacion $cotizacion): void
     {
         $cotizacion->load(['items.opciones']);
@@ -216,20 +265,19 @@ class CotizacionController extends Controller
         ]);
     }
 
-       // ✅ ELIMINAR COTIZACIÓN COMPLETA (con sus líneas + adiciones)
+    // ELIMINAR COTIZACIÓN COMPLETA
     public function destroy(Cotizacion $cotizacion)
     {
+        $this->validarAdmin();
+
         DB::transaction(function () use ($cotizacion) {
-            // borrar adiciones de cada item
             CotizacionItemOpcion::whereIn(
                 'cotizacionitem_id',
                 CotizacionItem::where('cotizacion_id', $cotizacion->id)->pluck('id')
             )->delete();
 
-            // borrar items
             CotizacionItem::where('cotizacion_id', $cotizacion->id)->delete();
 
-            // borrar cotización
             $cotizacion->delete();
         });
 

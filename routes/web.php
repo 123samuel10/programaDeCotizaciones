@@ -3,9 +3,11 @@
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\CotizacionController;
 use App\Http\Controllers\Admin\ProductoController;
+
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Cliente\CotizacionClienteController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -59,6 +61,21 @@ Route::prefix('admin')->as('admin.')->group(function () {
         ->name('cotizaciones.items.opciones.destroy');
 
         Route::resource('clientes', ClienteController::class);
+});
+
+
+
+
+Route::prefix('cliente')->name('cliente.')->group(function () {
+
+    Route::get('cotizaciones', [CotizacionClienteController::class, 'index'])
+        ->name('cotizaciones.index');
+
+    Route::post('cotizaciones/{cotizacion}/aceptar', [CotizacionClienteController::class, 'aceptar'])
+        ->name('cotizaciones.aceptar');
+
+    Route::post('cotizaciones/{cotizacion}/rechazar', [CotizacionClienteController::class, 'rechazar'])
+        ->name('cotizaciones.rechazar');
 });
 
 

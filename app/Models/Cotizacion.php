@@ -10,11 +10,12 @@ class Cotizacion extends Model
     protected $table = 'cotizaciones';
 
    protected $fillable = [
-    'user_id',
-    // 'producto_id',
-    // 'cantidad_producto',
-    'total_venta',
-    'total_costo',
+  'user_id',
+  'total_venta',
+  'total_costo',
+  'estado',
+  'respondida_en',
+  'nota_cliente',
 ];
 
 

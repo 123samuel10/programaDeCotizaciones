@@ -34,16 +34,26 @@
                             <tr class="text-left text-gray-600 dark:text-gray-300">
                                 <th class="py-2">#</th>
                                 <th class="py-2">Cliente</th>
+                                <th class="py-2">Estado</th>
+                                <th class="py-2">Respondida</th>
                                 <th class="py-2 text-center">Líneas</th>
                                 <th class="py-2 text-right">Total Venta</th>
-                                <th class="py-2 text-right">Total Costo</th>
                                 <th class="py-2 text-right">Acción</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse($cotizaciones as $c)
-                                <tr class="border-t dark:border-gray-700">
+                                @php
+                                    $estado = $c->estado ?? 'pendiente';
+                                    $badge = match($estado) {
+                                        'aceptada' => 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20',
+                                        'rechazada' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
+                                        default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
+                                    };
+                                @endphp
+
+                                <tr class="border-t dark:border-gray-700 align-top">
                                     <td class="py-3 font-semibold text-gray-900 dark:text-gray-100">
                                         {{ $c->id }}
                                     </td>
@@ -55,18 +65,34 @@
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
                                             {{ $c->usuario->email ?? '' }}
                                         </div>
+
+                                        @if($c->nota_cliente)
+                                            <div class="mt-2 text-xs p-2 rounded-xl bg-gray-50 dark:bg-gray-900/30 border dark:border-gray-700 text-gray-700 dark:text-gray-200">
+                                                <span class="font-semibold">Nota:</span> {{ $c->nota_cliente }}
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    <td class="py-3">
+                                        <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 inline-flex {{ $badge }}">
+                                            {{ strtoupper($estado) }}
+                                        </span>
+                                    </td>
+
+                                    <td class="py-3 text-gray-700 dark:text-gray-200">
+                                        @if($c->respondida_en)
+                                            {{ \Carbon\Carbon::parse($c->respondida_en)->format('Y-m-d H:i') }}
+                                        @else
+                                            —
+                                        @endif
                                     </td>
 
                                     <td class="py-3 text-center">
-                                        {{ $c->items()->count() }}
+                                        {{ $c->items_count ?? $c->items()->count() }}
                                     </td>
 
                                     <td class="py-3 text-right text-gray-900 dark:text-gray-100">
                                         ${{ number_format((float) $c->total_venta, 2, ',', '.') }}
-                                    </td>
-
-                                    <td class="py-3 text-right text-gray-900 dark:text-gray-100">
-                                        ${{ number_format((float) $c->total_costo, 2, ',', '.') }}
                                     </td>
 
                                     <td class="py-3 text-right">
@@ -76,14 +102,13 @@
                                                 Abrir
                                             </a>
 
-                                            {{-- ✅ BOTÓN ELIMINAR (con modal) --}}
                                             <form method="POST"
                                                   action="{{ route('admin.cotizaciones.destroy', $c->id) }}"
                                                   class="inline js-delete-quote-form"
                                                   data-id="{{ $c->id }}"
                                                   data-cliente="{{ $c->usuario->name ?? '—' }}"
                                                   data-email="{{ $c->usuario->email ?? '' }}"
-                                                  data-lineas="{{ $c->items()->count() }}">
+                                                  data-lineas="{{ $c->items_count ?? $c->items()->count() }}">
                                                 @csrf
                                                 @method('DELETE')
 
@@ -97,20 +122,18 @@
                                 </tr>
                             @empty
                                 <tr class="border-t dark:border-gray-700">
-                                    <td colspan="6" class="py-8 text-center text-gray-600 dark:text-gray-300">
+                                    <td colspan="7" class="py-8 text-center text-gray-600 dark:text-gray-300">
                                         No hay cotizaciones aún.
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
-
                     </table>
                 </div>
             </div>
 
         </div>
     </div>
-
     {{-- ✅ MODAL ELIMINAR COTIZACIÓN --}}
     <div id="deleteQuoteModal"
          class="fixed inset-0 z-50 hidden"

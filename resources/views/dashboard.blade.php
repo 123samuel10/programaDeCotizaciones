@@ -89,7 +89,7 @@
                         Aquí verás tus solicitudes, sus totales y el estado.
                     </p>
 
-                    <a href="{{ route('dashboard') }}"
+                    <a href="{{ route('cliente.cotizaciones.index') }}"
                        class="mt-6 inline-flex items-center justify-center rounded-xl px-4 py-2.5 font-bold text-white
                               bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 transition">
                         Ver mis cotizaciones
