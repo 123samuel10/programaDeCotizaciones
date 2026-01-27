@@ -22,6 +22,112 @@
                 </div>
             @endif
 
+            {{-- 🔎 Buscador / Filtros --}}
+            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 mb-6">
+                <form method="GET" action="{{ route('admin.ventas.index') }}" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+                    {{-- Buscar --}}
+                    <div class="md:col-span-7">
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-2">
+                            Buscar
+                        </label>
+
+                        <div class="relative">
+                            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="11" cy="11" r="7"></circle>
+                                    <path d="M21 21l-4.3-4.3"></path>
+                                </svg>
+                            </span>
+
+                            <input
+                                type="text"
+                                name="q"
+                                value="{{ request('q') }}"
+                                placeholder="ID de venta/cotización, nombre o correo…"
+                                class="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700
+                                       bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                        </div>
+
+                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Tip: prueba con “samuel”, “@gmail.com” o un número.
+                        </p>
+                    </div>
+
+                    {{-- Estado --}}
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-2">
+                            Estado
+                        </label>
+
+                        <select
+                            name="estado"
+                            class="w-full py-2.5 px-3 rounded-xl border border-gray-200 dark:border-gray-700
+                                   bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100
+                                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                            <option value="">Todos</option>
+                            <option value="pendiente_pago" {{ request('estado') === 'pendiente_pago' ? 'selected' : '' }}>
+                                Pendiente pago
+                            </option>
+                            <option value="pagada" {{ request('estado') === 'pagada' ? 'selected' : '' }}>
+                                Pagada
+                            </option>
+                            <option value="cancelada" {{ request('estado') === 'cancelada' ? 'selected' : '' }}>
+                                Cancelada
+                            </option>
+                        </select>
+                    </div>
+
+                    {{-- Botones --}}
+                    <div class="md:col-span-2 flex md:items-end gap-2">
+                        <button
+                            type="submit"
+                            class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl
+                                   bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm"
+                        >
+                            Filtrar
+                        </button>
+
+                        <a
+                            href="{{ route('admin.ventas.index') }}"
+                            class="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-xl
+                                   bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold
+                                   dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100"
+                        >
+                            Limpiar
+                        </a>
+                    </div>
+                </form>
+
+                {{-- Resumen rápido --}}
+           {{-- Resumen rápido --}}
+<div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Ventas encontradas</div>
+        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ $totalVentas }}</div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Ingresos cobrados (pagadas)</div>
+        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+            ${{ number_format((float)$ingresosCobrados, 2, ',', '.') }}
+        </div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Por cobrar (pendientes)</div>
+        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+            ${{ number_format((float)$porCobrar, 2, ',', '.') }}
+        </div>
+    </div>
+</div>
+
+            </div>
+
+            {{-- Tabla --}}
             <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
                 <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
@@ -46,6 +152,9 @@
                                     'cancelada' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
                                     default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
                                 };
+
+                                // ✅ Cliente seguro (por si la venta no tiene usuario directo)
+                                $cliente = $v->usuario ?? $v->cotizacion->usuario ?? null;
                             @endphp
 
                             <tr class="border-t dark:border-gray-700">
@@ -55,10 +164,10 @@
 
                                 <td class="py-3">
                                     <div class="text-gray-900 dark:text-gray-100 font-semibold">
-                                        {{ $v->usuario->name ?? '—' }}
+                                        {{ $cliente->name ?? '—' }}
                                     </div>
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $v->usuario->email ?? '' }}
+                                        {{ $cliente->email ?? '' }}
                                     </div>
                                 </td>
 
@@ -86,13 +195,20 @@
                         @empty
                             <tr class="border-t dark:border-gray-700">
                                 <td colspan="6" class="py-10 text-center text-gray-600 dark:text-gray-300">
-                                    Aún no hay ventas. Se crearán cuando un cliente acepte una cotización.
+                                    No hay ventas con esos filtros.
                                 </td>
                             </tr>
                         @endforelse
                         </tbody>
                     </table>
                 </div>
+
+                {{-- Paginación --}}
+                @if(method_exists($ventas, 'links'))
+                    <div class="mt-6">
+                        {{ $ventas->links() }}
+                    </div>
+                @endif
             </div>
 
         </div>

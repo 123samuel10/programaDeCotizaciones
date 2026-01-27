@@ -21,18 +21,63 @@ class VentaController extends Controller
 
         return $user;
     }
+public function index(Request $request)
+{
+    $this->validarAdmin();
 
- public function index()
-    {
-        $ventas = Venta::with(['cotizacion.usuario'])
-            ->latest()
-            ->get();
+    $q = trim((string) $request->get('q', ''));
+    $estado = $request->get('estado'); // filtro para la tabla
 
-        $totalVentas = $ventas->count();
-        $totalIngresos = (float) $ventas->sum('total_venta'); // solo venta, NO costo
+    // Base query SOLO con búsqueda (q) - sin estado
+    $baseQuery = Venta::query()
+        ->with(['usuario', 'cotizacion.usuario'])
+        ->when($q, function ($query) use ($q) {
+            $query->where(function ($sub) use ($q) {
 
-        return view('admin.ventas.index', compact('ventas', 'totalVentas', 'totalIngresos'));
-    }
+                if (is_numeric($q)) {
+                    $sub->where('id', (int) $q)
+                        ->orWhere('cotizacion_id', (int) $q);
+                    return;
+                }
+
+                $sub->whereHas('usuario', function ($u) use ($q) {
+                        $u->where('name', 'like', "%{$q}%")
+                          ->orWhere('email', 'like', "%{$q}%");
+                    })
+                    ->orWhereHas('cotizacion.usuario', function ($u) use ($q) {
+                        $u->where('name', 'like', "%{$q}%")
+                          ->orWhere('email', 'like', "%{$q}%");
+                    });
+            });
+        });
+
+    // Métricas PRO (basadas en la búsqueda, no en el filtro de estado de la tabla)
+    $totalVentas = (clone $baseQuery)->count();
+
+    $ingresosCobrados = (float) (clone $baseQuery)
+        ->where('estado_venta', 'pagada')
+        ->sum('total_venta');
+
+    $porCobrar = (float) (clone $baseQuery)
+        ->where('estado_venta', 'pendiente_pago')
+        ->sum('total_venta');
+
+    // Query de la tabla (aquí sí aplicamos estado si el usuario lo eligió)
+    $ventasQuery = (clone $baseQuery)
+        ->when($estado, fn($query) => $query->where('estado_venta', $estado))
+        ->latest();
+
+    $ventas = $ventasQuery->paginate(12)->withQueryString();
+
+    return view('admin.ventas.index', compact(
+        'ventas',
+        'totalVentas',
+        'ingresosCobrados',
+        'porCobrar'
+    ));
+}
+
+
 
     public function show(Venta $venta)
     {

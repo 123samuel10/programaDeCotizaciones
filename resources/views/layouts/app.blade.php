@@ -10,6 +10,26 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+    {{--  Evita parpadeo de Alpine --}}
+    <style>[x-cloak]{display:none!important}</style>
+
+    {{--  Evita “flash” de dark mode (aplica dark ANTES de pintar) --}}
+    <script>
+        (function () {
+            try {
+                // Si tú manejas el tema con localStorage, este es el estándar:
+                // 'theme' = 'dark' | 'light'
+                const theme = localStorage.getItem('theme');
+
+                const shouldDark = theme === 'dark'
+                    || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+                if (shouldDark) document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+            } catch (e) {}
+        })();
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
