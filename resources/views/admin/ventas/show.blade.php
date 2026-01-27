@@ -1,3 +1,4 @@
+{{-- resources/views/admin/ventas/show.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-start justify-between gap-4">
@@ -28,6 +29,13 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200
+                            dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
+                    {{ session('error') }}
+                </div>
+            @endif
+
             @php
                 $estado = $venta->estado_venta ?? 'pendiente_pago';
                 $badge = match($estado) {
@@ -35,6 +43,32 @@
                     'cancelada' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
                     default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
                 };
+
+                $metodo = $venta->metodo_pago ?: '—';
+                $ref = $venta->referencia_pago ?? null;
+
+                $compPath = $venta->comprobante_path ?? null;
+                $compEstado = $venta->comprobante_estado ?? null; // pendiente_revision | aceptado | rechazado
+                $compSubido = $venta->comprobante_subido_en ?? null;
+                $compNota = $venta->comprobante_nota_admin ?? null;
+
+                $tieneComp = !empty($compPath);
+
+                $badgeComp = match($compEstado) {
+                    'aceptado' => 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20',
+                    'rechazado' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
+                    default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
+                };
+
+                // Datos cuenta desde .env (para mostrarle al admin qué vio el cliente)
+                $pagoBanco   = env('PAGO_BANCO', 'Banco');
+                $pagoCuenta  = env('PAGO_CUENTA', '0000000000');
+                $pagoTitular = env('PAGO_TITULAR', 'Heral Enterprises');
+
+                // Para detectar si es imagen o pdf (para vista previa)
+                $ext = $tieneComp ? strtolower(pathinfo($compPath, PATHINFO_EXTENSION)) : '';
+                $isImage = in_array($ext, ['jpg','jpeg','png','webp']);
+                $isPdf = ($ext === 'pdf');
             @endphp
 
             {{-- Panel resumen --}}
@@ -70,10 +104,170 @@
                 @endif
             </div>
 
-            {{-- Actualizar estado --}}
+            {{-- ✅ BLOQUE PRO DE PAGO + COMPROBANTE --}}
+            <div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-extrabold text-gray-900 dark:text-gray-100">
+                            Pago del cliente
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Método elegido y evidencia (si aplica).
+                        </p>
+                    </div>
+
+                    @if($tieneComp)
+                        <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 inline-flex {{ $badgeComp }}">
+                            COMPROBANTE: {{ strtoupper(str_replace('_',' ', $compEstado ?: 'pendiente_revision')) }}
+                        </span>
+                    @endif
+                </div>
+
+                <div class="mt-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+                    {{-- Info método --}}
+                    <div class="lg:col-span-5 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+                        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Método</div>
+                        <div class="mt-1 text-lg font-extrabold text-gray-900 dark:text-gray-100">
+                            {{ strtoupper($metodo) }}
+                        </div>
+
+                        @if($ref)
+                            <div class="mt-3 text-sm text-gray-700 dark:text-gray-200">
+                                <span class="font-bold">Referencia:</span> {{ $ref }}
+                            </div>
+                        @endif
+
+                        @if($metodo === 'transferencia')
+                            <div class="mt-4 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 p-4">
+                                <div class="font-extrabold text-gray-900 dark:text-gray-100">Datos de cuenta (lo que ve el cliente)</div>
+                                <div class="mt-2 text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                                    <div><span class="font-bold">Banco:</span> {{ $pagoBanco }}</div>
+                                    <div><span class="font-bold">Cuenta:</span> {{ $pagoCuenta }}</div>
+                                    <div><span class="font-bold">Titular:</span> {{ $pagoTitular }}</div>
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($tieneComp && $compSubido)
+                            <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                                Subido: {{ \Carbon\Carbon::parse($compSubido)->format('Y-m-d H:i') }}
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Evidencia --}}
+                    <div class="lg:col-span-7 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Evidencia</div>
+                                <div class="mt-1 font-extrabold text-gray-900 dark:text-gray-100">
+                                    Comprobante
+                                </div>
+                            </div>
+
+                            @if($tieneComp)
+                                <a href="{{ asset('storage/'.$compPath) }}" target="_blank"
+                                   class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200
+                                          dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-extrabold">
+                                    Abrir archivo
+                                </a>
+                            @endif
+                        </div>
+
+                        @if(!$tieneComp)
+                            <div class="mt-4 p-4 rounded-2xl bg-yellow-50 border border-yellow-100 text-yellow-800
+                                        dark:bg-yellow-500/10 dark:border-yellow-500/20 dark:text-yellow-200">
+                                <div class="font-extrabold">Sin comprobante</div>
+                                <div class="text-sm mt-1">El cliente aún no ha subido evidencia.</div>
+                            </div>
+                        @else
+                            {{-- Preview --}}
+                            <div class="mt-4">
+                                @if($isImage)
+                                    <img src="{{ asset('storage/'.$compPath) }}"
+                                         alt="Comprobante"
+                                         class="w-full max-h-[420px] object-contain rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                                @elseif($isPdf)
+                                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                        <iframe src="{{ asset('storage/'.$compPath) }}" class="w-full h-[420px]"></iframe>
+                                    </div>
+                                @else
+                                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                        Archivo subido. Usa “Abrir archivo” para verlo.
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if($compEstado === 'rechazado' && $compNota)
+                                <div class="mt-4 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-800
+                                            dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-200">
+                                    <div class="font-extrabold">Última revisión: RECHAZADO</div>
+                                    <div class="text-sm mt-1">{{ $compNota }}</div>
+                                </div>
+                            @endif
+                        @endif
+
+                        {{-- ✅ Acciones de revisión --}}
+                        @if($tieneComp && $estado !== 'pagada')
+                            <div class="mt-5 border-t border-gray-200 dark:border-gray-700 pt-5">
+                                <div class="font-extrabold text-gray-900 dark:text-gray-100">
+                                    Revisión del comprobante
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    Aprueba para marcar la venta como <b>PAGADA</b>. Si rechazas, escribe el motivo.
+                                </p>
+
+                                <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-3">
+                                    {{-- Aprobar --}}
+{{-- Aprobar --}}
+<form method="POST" action="{{ route('admin.ventas.decision', $venta->id) }}" class="lg:col-span-4">
+    @csrf
+    @method('PUT')
+    <input type="hidden" name="decision" value="aceptar">
+
+    <button class="w-full px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-extrabold">
+        Aprobar comprobante
+    </button>
+</form>
+
+{{-- Rechazar --}}
+<form method="POST" action="{{ route('admin.ventas.decision', $venta->id) }}"
+      class="lg:col-span-8 grid grid-cols-1 lg:grid-cols-12 gap-3">
+    @csrf
+    @method('PUT')
+    <input type="hidden" name="decision" value="rechazar">
+
+    <div class="lg:col-span-9">
+        <input
+            type="text"
+            name="nota"
+            maxlength="1000"
+            placeholder="Motivo del rechazo (ej: imagen borrosa, falta valor, no coincide fecha...)"
+            class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            required
+        >
+    </div>
+
+    <div class="lg:col-span-3">
+        <button class="w-full px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold">
+            Rechazar
+        </button>
+    </div>
+</form>
+
+                                </div>
+                            </div>
+                        @endif
+
+                    </div>
+                </div>
+            </div>
+
+            {{-- Actualizar estado (manual) --}}
             <div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
                 <h3 class="text-lg font-extrabold text-gray-900 dark:text-gray-100 mb-4">
-                    Gestión de venta
+                    Gestión de venta (manual)
                 </h3>
 
                 <form method="POST" action="{{ route('admin.ventas.update', $venta->id) }}" class="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -114,9 +308,7 @@
             {{-- Detalle: items + adiciones --}}
             <div class="mt-6 space-y-6">
                 @foreach($venta->items as $it)
-                    @php
-                        $totalItem = (float) $it->subtotal_venta;
-                    @endphp
+                    @php $totalItem = (float) $it->subtotal_venta; @endphp
 
                     <div class="bg-white dark:bg-gray-800 rounded-2xl border dark:border-gray-700 overflow-hidden">
                         <div class="p-6 border-b border-gray-100 dark:border-gray-700">

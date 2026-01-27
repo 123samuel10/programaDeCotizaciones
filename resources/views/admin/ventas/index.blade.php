@@ -1,3 +1,4 @@
+{{-- resources/views/admin/ventas/index.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-start justify-between gap-4">
@@ -19,6 +20,13 @@
                 <div class="mb-6 p-4 rounded-xl bg-green-50 text-green-800 border border-green-200
                             dark:bg-green-900/30 dark:text-green-100 dark:border-green-900">
                     {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-6 p-4 rounded-xl bg-red-50 text-red-800 border border-red-200
+                            dark:bg-red-900/30 dark:text-red-100 dark:border-red-900">
+                    {{ session('error') }}
                 </div>
             @endif
 
@@ -103,28 +111,26 @@
                 </form>
 
                 {{-- Resumen rápido --}}
-           {{-- Resumen rápido --}}
-<div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Ventas encontradas</div>
-        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ $totalVentas }}</div>
-    </div>
+                <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Ventas encontradas</div>
+                        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">{{ $totalVentas }}</div>
+                    </div>
 
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Ingresos cobrados (pagadas)</div>
-        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
-            ${{ number_format((float)$ingresosCobrados, 2, ',', '.') }}
-        </div>
-    </div>
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Ingresos cobrados (pagadas)</div>
+                        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+                            ${{ number_format((float)$ingresosCobrados, 2, ',', '.') }}
+                        </div>
+                    </div>
 
-    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Por cobrar (pendientes)</div>
-        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
-            ${{ number_format((float)$porCobrar, 2, ',', '.') }}
-        </div>
-    </div>
-</div>
-
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Por cobrar (pendientes)</div>
+                        <div class="text-2xl font-extrabold text-gray-900 dark:text-white">
+                            ${{ number_format((float)$porCobrar, 2, ',', '.') }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {{-- Tabla --}}
@@ -136,6 +142,7 @@
                             <th class="py-2">#</th>
                             <th class="py-2">Cliente</th>
                             <th class="py-2">Estado</th>
+                            <th class="py-2">Pago</th>
                             <th class="py-2 text-right">Total venta</th>
                             <th class="py-2 text-right">Creada</th>
                             <th class="py-2 text-right">Acción</th>
@@ -144,20 +151,29 @@
 
                         <tbody>
                         @forelse($ventas as $v)
-
                             @php
                                 $estado = $v->estado_venta ?? 'pendiente_pago';
-                                $badge = match($estado) {
+                                $badgeEstado = match($estado) {
                                     'pagada' => 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20',
                                     'cancelada' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
                                     default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
                                 };
 
-                                // ✅ Cliente seguro (por si la venta no tiene usuario directo)
                                 $cliente = $v->usuario ?? $v->cotizacion->usuario ?? null;
+
+                                $metodo = $v->metodo_pago ?: '—';
+
+                                $compEstado = $v->comprobante_estado ?? null; // pendiente_revision | aceptado | rechazado
+                                $tieneComp = !empty($v->comprobante_path);
+
+                                $badgeComp = match($compEstado) {
+                                    'aceptado' => 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20',
+                                    'rechazado' => 'bg-red-50 text-red-700 ring-red-100 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-500/20',
+                                    default => 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20',
+                                };
                             @endphp
 
-                            <tr class="border-t dark:border-gray-700">
+                            <tr class="border-t dark:border-gray-700 align-top">
                                 <td class="py-3 font-semibold text-gray-900 dark:text-gray-100">
                                     {{ $v->id }}
                                 </td>
@@ -169,12 +185,39 @@
                                     <div class="text-xs text-gray-500 dark:text-gray-400">
                                         {{ $cliente->email ?? '' }}
                                     </div>
+                                    <div class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                        Cotización: #{{ $v->cotizacion_id }}
+                                    </div>
                                 </td>
 
                                 <td class="py-3">
-                                    <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 {{ $badge }}">
+                                    <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 inline-flex {{ $badgeEstado }}">
                                         {{ strtoupper(str_replace('_',' ', $estado)) }}
                                     </span>
+                                </td>
+
+                                {{-- Pago --}}
+                                <td class="py-3">
+                                    <div class="text-gray-900 dark:text-gray-100 font-semibold">
+                                        Método: <span class="font-extrabold">{{ strtoupper($metodo) }}</span>
+                                    </div>
+
+                                    <div class="mt-1 text-xs text-gray-600 dark:text-gray-300">
+                                        Comprobante:
+                                        @if(!$tieneComp)
+                                            <span class="font-bold">—</span>
+                                        @else
+                                            <span class="text-xs font-extrabold px-2 py-0.5 rounded-full ring-1 inline-flex {{ $badgeComp }}">
+                                                {{ strtoupper(str_replace('_',' ', $compEstado ?: 'pendiente_revision')) }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if($tieneComp && !empty($v->comprobante_subido_en))
+                                        <div class="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                                            Subido: {{ \Carbon\Carbon::parse($v->comprobante_subido_en)->format('Y-m-d H:i') }}
+                                        </div>
+                                    @endif
                                 </td>
 
                                 <td class="py-3 text-right font-extrabold text-gray-900 dark:text-gray-100">
@@ -194,7 +237,7 @@
                             </tr>
                         @empty
                             <tr class="border-t dark:border-gray-700">
-                                <td colspan="6" class="py-10 text-center text-gray-600 dark:text-gray-300">
+                                <td colspan="7" class="py-10 text-center text-gray-600 dark:text-gray-300">
                                     No hay ventas con esos filtros.
                                 </td>
                             </tr>

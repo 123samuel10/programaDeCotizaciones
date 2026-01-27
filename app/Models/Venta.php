@@ -21,6 +21,13 @@ class Venta extends Model
         'pagada_en',
         'nota_cliente',
         'notas_internas',
+
+          // ✅ FALTABAN (comprobante)
+        'referencia_pago',
+        'comprobante_path',
+        'comprobante_subido_en',
+        'comprobante_estado',
+        'comprobante_nota_admin',
     ];
 
     public function cotizacion()

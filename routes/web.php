@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Cliente\CotizacionClienteController;
+use App\Http\Controllers\Cliente\PagoVentaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -68,6 +69,11 @@ Route::prefix('admin')->as('admin.')->group(function () {
 
 Route::get('ventas/{venta}', [VentaController::class, 'show'])->name('ventas.show');
 Route::put('ventas/{venta}', [VentaController::class, 'update'])->name('ventas.update');
+
+Route::post('ventas/{venta}/decision', [VentaController::class, 'decisionPago'])
+    ->name('ventas.decision');
+    Route::put('ventas/{venta}/decision', [VentaController::class, 'decisionPago'])
+    ->name('ventas.decision');
 });
 
 
@@ -83,6 +89,12 @@ Route::prefix('cliente')->name('cliente.')->group(function () {
 
     Route::post('cotizaciones/{cotizacion}/rechazar', [CotizacionClienteController::class, 'rechazar'])
         ->name('cotizaciones.rechazar');
+
+        Route::post('ventas/{venta}/metodo', [PagoVentaController::class, 'guardarMetodo'])
+    ->name('ventas.metodo');
+
+Route::post('ventas/{venta}/comprobante', [PagoVentaController::class, 'subirComprobante'])
+    ->name('ventas.comprobante');
 });
 
 
