@@ -5,13 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Mail\CotizacionMail;
 
 use App\Models\Cotizacion;
 use App\Models\Producto;
 use App\Models\User;
 use App\Models\Opcion;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 use App\Models\CotizacionItem;
 use App\Models\CotizacionItemOpcion;
 
@@ -85,23 +87,43 @@ class CotizacionController extends Controller
     }
 
     // EDITAR
-    public function edit(Cotizacion $cotizacion)
-    {
-        $this->validarAdmin();
+  public function edit(Cotizacion $cotizacion)
+{
+    $this->validarAdmin();
 
-        $cotizacion = Cotizacion::with([
-            'usuario',
-            'items.producto',
-            'items.opciones.opcion',
-        ])->findOrFail($cotizacion->id);
+    $cotizacion = Cotizacion::with([
+        'usuario',
+        'items.producto',
+        'items.opciones.opcion',
+    ])->findOrFail($cotizacion->id);
 
-        $this->recalcularTotales($cotizacion);
-        $cotizacion->refresh();
+    $this->recalcularTotales($cotizacion);
+    $cotizacion->refresh();
 
-        $productos = Producto::latest()->get();
-$productosAgregadosIds = $cotizacion->items->pluck('producto_id')->unique()->toArray();
-       return view('admin.cotizaciones.edit', compact('cotizacion', 'productos', 'productosAgregadosIds'));
-    }
+    $productos = Producto::orderBy('marca')
+        ->orderBy('modelo')
+        ->orderBy('nombre_producto')
+        ->get([
+            'id',
+            'marca',
+            'modelo',
+            'nombre_producto',
+            'descripcion',
+            'foto',
+            'repisas_iluminadas',
+            'refrigerante',
+            'longitud',
+            'profundidad',
+            'altura',
+            'precio_base_venta',
+            'precio_base_costo',
+        ]);
+
+    $productosAgregadosIds = $cotizacion->items->pluck('producto_id')->unique()->toArray();
+
+    return view('admin.cotizaciones.edit', compact('cotizacion', 'productos', 'productosAgregadosIds'));
+}
+
 
     // AGREGAR ITEM
     // AGREGAR ITEM
@@ -297,5 +319,26 @@ public function agregarItem(Request $request, Cotizacion $cotizacion)
             ->route('admin.cotizaciones.index')
             ->with('success', 'Cotización eliminada correctamente.');
     }
+
+public function enviarPorCorreo(Cotizacion $cotizacion)
+{
+    $this->validarAdmin();
+
+    // Asegurar relación usuario
+    $cotizacion->load('usuario');
+
+    // 🔐 Generar token si no existe
+    if (empty($cotizacion->token)) {
+        $cotizacion->token = Str::random(64); // coincide con tu migración token(64)
+        $cotizacion->save();
+    }
+
+    Mail::to($cotizacion->usuario->email)
+        ->send(new CotizacionMail($cotizacion));
+
+    return back()->with('success', 'Cotización enviada por correo correctamente.');
+}
+
+
 
 }

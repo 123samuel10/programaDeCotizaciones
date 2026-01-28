@@ -5,105 +5,126 @@
             <!-- LEFT -->
             <div class="flex items-center">
 
-                <!-- Logo (solo ícono, sin texto para no repetir) -->
+                <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
+                    {{-- Si no hay sesión, que no intente ir a dashboard --}}
+                    <a href="{{ auth()->check() ? route('dashboard') : url('/') }}" class="flex items-center gap-2">
                         <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
                     </a>
                 </div>
 
                 <!-- Links Desktop -->
                 <div class="hidden sm:flex sm:items-center sm:ms-10 gap-2">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        Panel
-                    </x-nav-link>
 
-                    @if(auth()->user()->role === 'admin')
-                        <x-nav-link :href="route('admin.productos.index')" :active="request()->routeIs('admin.productos.*')">
-                            Productos
+                    @auth
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                            Panel
                         </x-nav-link>
 
-                        <x-nav-link :href="route('admin.cotizaciones.index')" :active="request()->routeIs('admin.cotizaciones.*')">
-                            Cotizaciones
-                        </x-nav-link>
+                        @if(auth()->user()->role === 'admin')
+                            <x-nav-link :href="route('admin.productos.index')" :active="request()->routeIs('admin.productos.*')">
+                                Productos
+                            </x-nav-link>
 
-                        {{-- ✅ NUEVO: Ventas --}}
-                        <x-nav-link :href="route('admin.ventas.index')" :active="request()->routeIs('admin.ventas.*')">
-                            Ventas
-                        </x-nav-link>
+                            <x-nav-link :href="route('admin.cotizaciones.index')" :active="request()->routeIs('admin.cotizaciones.*')">
+                                Cotizaciones
+                            </x-nav-link>
 
-                        <x-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
-                            Clientes
+                            <x-nav-link :href="route('admin.ventas.index')" :active="request()->routeIs('admin.ventas.*')">
+                                Ventas
+                            </x-nav-link>
+
+                            <x-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
+                                Clientes
+                            </x-nav-link>
+                        @else
+                            <x-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
+                                Mis cotizaciones
+                            </x-nav-link>
+                        @endif
+                    @endauth
+
+                    @guest
+                        {{-- Menú para links públicos --}}
+                        <x-nav-link :href="route('login')" :active="request()->routeIs('login')">
+                            Iniciar sesión
                         </x-nav-link>
-                    @else
-                        <x-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
-                            Mis cotizaciones
-                        </x-nav-link>
-                    @endif
+                    @endguest
+
                 </div>
             </div>
 
             <!-- RIGHT -->
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
 
-                {{-- Badge Rol (pequeño, útil, sin repetir marca) --}}
-                @php $rol = auth()->user()->role ?? 'cliente'; @endphp
-                <span class="text-[11px] font-bold px-3 py-1 rounded-full
-                    {{ $rol === 'admin'
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200' }}">
-                    {{ strtoupper($rol) }}
-                </span>
+                @auth
+                    @php $rol = auth()->user()->role ?? 'cliente'; @endphp
 
-                <!-- Dropdown Usuario -->
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="inline-flex items-center gap-3 px-3 py-2 rounded-lg
-                                       hover:bg-gray-100 dark:hover:bg-gray-700/50 transition">
+                    <span class="text-[11px] font-bold px-3 py-1 rounded-full
+                        {{ $rol === 'admin'
+                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-700/60 dark:text-gray-200' }}">
+                        {{ strtoupper($rol) }}
+                    </span>
 
-                            {{-- Avatar inicial --}}
-                            <div class="h-9 w-9 rounded-full bg-gray-100 dark:bg-gray-700
-                                        ring-1 ring-gray-200 dark:ring-gray-600
-                                        flex items-center justify-center font-extrabold text-gray-700 dark:text-gray-200">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    <!-- Dropdown Usuario -->
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <button class="inline-flex items-center gap-3 px-3 py-2 rounded-lg
+                                           hover:bg-gray-100 dark:hover:bg-gray-700/50 transition">
+
+                                <div class="h-9 w-9 rounded-full bg-gray-100 dark:bg-gray-700
+                                            ring-1 ring-gray-200 dark:ring-gray-600
+                                            flex items-center justify-center font-extrabold text-gray-700 dark:text-gray-200">
+                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                </div>
+
+                                <div class="hidden lg:block text-left">
+                                    <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                        {{ auth()->user()->name }}
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ auth()->user()->email }}
+                                    </div>
+                                </div>
+
+                                <svg class="fill-current h-4 w-4 text-gray-500 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </x-slot>
+
+                        <x-slot name="content">
+                            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                                <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ auth()->user()->name }}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ auth()->user()->email }}</div>
                             </div>
 
-                            <div class="hidden lg:block text-left">
-                                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ Auth::user()->name }}
-                                </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ Auth::user()->email }}
-                                </div>
-                            </div>
-
-                            <svg class="fill-current h-4 w-4 text-gray-500 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </x-slot>
-
-                    <x-slot name="content">
-                        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                            <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ Auth::user()->name }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ Auth::user()->email }}</div>
-                        </div>
-
-                        <x-dropdown-link :href="route('profile.edit')">
-                            Perfil
-                        </x-dropdown-link>
-
-                        <div class="border-t border-gray-100 dark:border-gray-700"></div>
-
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')"
-                                            onclick="event.preventDefault(); this.closest('form').submit();">
-                                Cerrar sesión
+                            <x-dropdown-link :href="route('profile.edit')">
+                                Perfil
                             </x-dropdown-link>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
+
+                            <div class="border-t border-gray-100 dark:border-gray-700"></div>
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <x-dropdown-link :href="route('logout')"
+                                                onclick="event.preventDefault(); this.closest('form').submit();">
+                                    Cerrar sesión
+                                </x-dropdown-link>
+                            </form>
+                        </x-slot>
+                    </x-dropdown>
+                @endauth
+
+                @guest
+                    <a href="{{ route('login') }}"
+                       class="px-4 py-2 rounded-xl bg-gray-900 text-white font-extrabold hover:bg-gray-800
+                              dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+                        Iniciar sesión
+                    </a>
+                @endguest
+
             </div>
 
             <!-- Hamburger -->
@@ -128,56 +149,65 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                Panel
-            </x-responsive-nav-link>
 
-            @if(auth()->user()->role === 'admin')
-                <x-responsive-nav-link :href="route('admin.productos.index')" :active="request()->routeIs('admin.productos.*')">
-                    Productos
+            @auth
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    Panel
                 </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('admin.cotizaciones.index')" :active="request()->routeIs('admin.cotizaciones.*')">
-                    Cotizaciones
-                </x-responsive-nav-link>
+                @if(auth()->user()->role === 'admin')
+                    <x-responsive-nav-link :href="route('admin.productos.index')" :active="request()->routeIs('admin.productos.*')">
+                        Productos
+                    </x-responsive-nav-link>
 
-                {{-- ✅ NUEVO: Ventas --}}
-                <x-responsive-nav-link :href="route('admin.ventas.index')" :active="request()->routeIs('admin.ventas.*')">
-                    Ventas
-                </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.cotizaciones.index')" :active="request()->routeIs('admin.cotizaciones.*')">
+                        Cotizaciones
+                    </x-responsive-nav-link>
 
-                <x-responsive-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
-                    Clientes
-                </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('admin.ventas.index')" :active="request()->routeIs('admin.ventas.*')">
+                        Ventas
+                    </x-responsive-nav-link>
 
+                    <x-responsive-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
+                        Clientes
+                    </x-responsive-nav-link>
+                @else
+                    <x-responsive-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
+                        Mis cotizaciones
+                    </x-responsive-nav-link>
+                @endif
+            @endauth
 
-            @else
-                <x-responsive-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
-                    Mis cotizaciones
+            @guest
+                <x-responsive-nav-link :href="route('login')" :active="request()->routeIs('login')">
+                    Iniciar sesión
                 </x-responsive-nav-link>
-            @endif
+            @endguest
+
         </div>
 
         <!-- Responsive Settings Options -->
-        <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
-            <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
-            </div>
+        @auth
+            <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
+                <div class="px-4">
+                    <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ auth()->user()->name }}</div>
+                    <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                </div>
 
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    Perfil
-                </x-responsive-nav-link>
-
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')"
-                        onclick="event.preventDefault(); this.closest('form').submit();">
-                        Cerrar sesión
+                <div class="mt-3 space-y-1">
+                    <x-responsive-nav-link :href="route('profile.edit')">
+                        Perfil
                     </x-responsive-nav-link>
-                </form>
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <x-responsive-nav-link :href="route('logout')"
+                            onclick="event.preventDefault(); this.closest('form').submit();">
+                            Cerrar sesión
+                        </x-responsive-nav-link>
+                    </form>
+                </div>
             </div>
-        </div>
+        @endauth
     </div>
 </nav>

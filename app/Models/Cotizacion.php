@@ -16,6 +16,7 @@ class Cotizacion extends Model
   'estado',
   'respondida_en',
   'nota_cliente',
+  'token'
 ];
 
 

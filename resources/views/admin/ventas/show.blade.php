@@ -104,7 +104,7 @@
                 @endif
             </div>
 
-            {{-- ✅ BLOQUE PRO DE PAGO + COMPROBANTE --}}
+            {{--  BLOQUE PRO DE PAGO + COMPROBANTE --}}
             <div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
                 <div class="flex items-start justify-between gap-4">
                     <div>
@@ -208,7 +208,7 @@
                             @endif
                         @endif
 
-                        {{-- ✅ Acciones de revisión --}}
+                        {{--  Acciones de revisión --}}
                         @if($tieneComp && $estado !== 'pagada')
                             <div class="mt-5 border-t border-gray-200 dark:border-gray-700 pt-5">
                                 <div class="font-extrabold text-gray-900 dark:text-gray-100">

@@ -54,6 +54,19 @@
             @endif
         </div>
 
+        <!-- Empresa -->
+<div>
+    <x-input-label for="empresa" :value="'Empresa (opcional)'" />
+    <x-text-input id="empresa" name="empresa" type="text" class="mt-1 block w-full"
+        :value="old('empresa', $user->empresa)" autocomplete="organization" />
+    <x-input-error class="mt-2" :messages="$errors->get('empresa')" />
+
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        Si eres empresa, escríbela para que aparezca en tus cotizaciones.
+    </p>
+</div>
+
+
         <!-- Botón guardar -->
         <div class="flex items-center gap-4">
             <x-primary-button>Guardar</x-primary-button>

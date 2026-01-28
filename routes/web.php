@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Cliente\CotizacionClienteController;
 use App\Http\Controllers\Cliente\PagoVentaController;
+use App\Http\Controllers\PublicCotizacionController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -74,6 +75,11 @@ Route::post('ventas/{venta}/decision', [VentaController::class, 'decisionPago'])
     ->name('ventas.decision');
     Route::put('ventas/{venta}/decision', [VentaController::class, 'decisionPago'])
     ->name('ventas.decision');
+
+
+    Route::post('cotizaciones/{cotizacion}/enviar-correo', [CotizacionController::class, 'enviarPorCorreo'])
+    ->name('cotizaciones.enviarCorreo');
+
 });
 
 
@@ -98,6 +104,73 @@ Route::post('ventas/{venta}/comprobante', [PagoVentaController::class, 'subirCom
 });
 
 
+// Route::prefix('c')->name('public.cotizacion.')->group(function () {
 
+//     // Ver cotización (página pública)
+//     Route::get('{token}', [PublicCotizacionController::class, 'ver'])
+//         ->name('ver');
+
+//     // Confirmaciones (pantalla antes de ejecutar)
+//     Route::get('{token}/confirmar-aceptar', [PublicCotizacionController::class, 'confirmarAceptar'])
+//         ->name('confirmar.aceptar');
+
+//     Route::get('{token}/confirmar-rechazar', [PublicCotizacionController::class, 'confirmarRechazar'])
+//         ->name('confirmar.rechazar');
+
+//     // Ejecutar acciones (POST, porque cambian estado y crean venta)
+//     Route::post('{token}/aceptar', [PublicCotizacionController::class, 'aceptar'])
+//         ->name('aceptar.post');
+
+//     Route::post('{token}/rechazar', [PublicCotizacionController::class, 'rechazar'])
+//         ->name('rechazar.post');
+
+//     // PDF descarga
+//     Route::get('{token}/pdf', [PublicCotizacionController::class, 'pdf'])
+//         ->name('pdf');
+// });
+
+// Route::get('/cotizacion/{token}', [PublicCotizacionController::class, 'ver'])
+//     ->name('public.cotizacion.ver');
+
+// // Confirmación (pantalla)
+// Route::get('/cotizacion/{token}/aceptar', [PublicCotizacionController::class, 'confirmarAceptar'])
+//     ->name('public.cotizacion.aceptar');
+
+// Route::get('/cotizacion/{token}/rechazar', [PublicCotizacionController::class, 'confirmarRechazar'])
+//     ->name('public.cotizacion.rechazar');
+
+// // Acción real (POST)
+// Route::post('/cotizacion/{token}/aceptar', [PublicCotizacionController::class, 'aceptar'])
+//     ->name('public.cotizacion.aceptar.post');
+
+// Route::post('/cotizacion/{token}/rechazar', [PublicCotizacionController::class, 'rechazar'])
+//     ->name('public.cotizacion.rechazar.post');
+// Route::get('/cotizacion/{token}/pdf', [PublicCotizacionController::class, 'pdf'])
+//     ->name('public.cotizacion.pdf');
+
+Route::prefix('cotizacion')->name('public.cotizacion.')->group(function () {
+
+    // Ver cotización
+    Route::get('{token}', [PublicCotizacionController::class, 'ver'])
+        ->name('ver');
+
+    // Confirmación (pantalla)
+    Route::get('{token}/aceptar', [PublicCotizacionController::class, 'confirmarAceptar'])
+        ->name('confirmar.aceptar');
+
+    Route::get('{token}/rechazar', [PublicCotizacionController::class, 'confirmarRechazar'])
+        ->name('confirmar.rechazar');
+
+    // Acción real (POST)
+    Route::post('{token}/aceptar', [PublicCotizacionController::class, 'aceptar'])
+        ->name('aceptar.post');
+
+    Route::post('{token}/rechazar', [PublicCotizacionController::class, 'rechazar'])
+        ->name('rechazar.post');
+
+    // PDF
+    Route::get('{token}/pdf', [PublicCotizacionController::class, 'pdf'])
+        ->name('pdf');
+});
 
 require __DIR__.'/auth.php';
