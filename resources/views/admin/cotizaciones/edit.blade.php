@@ -33,161 +33,159 @@
             @endif
 
             {{-- AGREGAR LÍNEA (PRODUCTO + CANTIDAD) --}}
- {{-- AGREGAR LÍNEA (PRODUCTO + CANTIDAD) --}}
-<div
-    class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 mb-6"
-    x-data="{
-        productos: @js($productos->map(fn($p) => [
-            'id' => $p->id,
-            'marca' => $p->marca,
-            'modelo' => $p->modelo,
-            'nombre_producto' => $p->nombre_producto,
-            'descripcion' => $p->descripcion,
-            'foto' => $p->foto,
-            'repisas_iluminadas' => $p->repisas_iluminadas,
-            'refrigerante' => $p->refrigerante,
-            'longitud' => $p->longitud,
-            'profundidad' => $p->profundidad,
-            'altura' => $p->altura,
-            'precio_base_venta' => $p->precio_base_venta,
-            'precio_base_costo' => $p->precio_base_costo,
-        ])),
-        seleccionadoId: '',
-        get seleccionado(){
-            return this.productos.find(p => String(p.id) === String(this.seleccionadoId)) || null;
-        },
-        init(){
-            this.$nextTick(() => {
-                const el = this.$refs.selectProducto;
-                if (el && el.value) this.seleccionadoId = el.value;
-            });
-        }
-    }"
->
-    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-        Agregar producto a la cotización
-    </h3>
+            <div
+                class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 mb-6"
+                x-data="{
+                    productos: @js($productos->map(fn($p) => [
+                        'id' => $p->id,
+                        'marca' => $p->marca,
+                        'modelo' => $p->modelo,
+                        'nombre_producto' => $p->nombre_producto,
+                        'descripcion' => $p->descripcion,
+                        'foto' => $p->foto,
+                        'repisas_iluminadas' => $p->repisas_iluminadas,
+                        'refrigerante' => $p->refrigerante,
+                        'longitud' => $p->longitud,
+                        'profundidad' => $p->profundidad,
+                        'altura' => $p->altura,
+                        'precio_base_venta' => $p->precio_base_venta,
+                        'precio_base_costo' => $p->precio_base_costo,
+                    ])),
+                    seleccionadoId: '',
+                    get seleccionado(){
+                        return this.productos.find(p => String(p.id) === String(this.seleccionadoId)) || null;
+                    },
+                    init(){
+                        this.$nextTick(() => {
+                            const el = this.$refs.selectProducto;
+                            if (el && el.value) this.seleccionadoId = el.value;
+                        });
+                    }
+                }"
+            >
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    Agregar producto a la cotización
+                </h3>
 
-    @php
-        $hayDisponibles = $productos->whereNotIn('id', $productosAgregadosIds ?? [])->count() > 0;
-    @endphp
+                @php
+                    $hayDisponibles = $productos->whereNotIn('id', $productosAgregadosIds ?? [])->count() > 0;
+                @endphp
 
-    @if(!$hayDisponibles)
-        <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4">
-            <p class="text-sm text-gray-600 dark:text-gray-300">
-                Ya agregaste todos los productos disponibles a esta cotización.
-            </p>
-        </div>
-    @else
-        <form method="POST" action="{{ route('admin.cotizaciones.items.store', $cotizacion->id) }}"
-              class="grid grid-cols-1 md:grid-cols-6 gap-4">
-            @csrf
-
-            <div class="md:col-span-4">
-                <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Producto</label>
-
-                <select
-                    x-ref="selectProducto"
-                    x-model="seleccionadoId"
-                    name="producto_id"
-                    class="w-full rounded-xl dark:bg-gray-900 dark:text-gray-100"
-                >
-                    @foreach($productos as $p)
-                        @continue(in_array($p->id, $productosAgregadosIds ?? []))
-                        <option value="{{ $p->id }}">
-                            {{ $p->marca }} - {{ $p->modelo }} ({{ $p->nombre_producto }})
-                        </option>
-                    @endforeach
-                </select>
-
-                @error('producto_id')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-
-                {{-- FICHA DEL PRODUCTO SELECCIONADO --}}
-                <div class="mt-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4">
-                    <template x-if="seleccionado">
-                        <div class="space-y-3">
-
-                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <span class="text-sm font-extrabold text-gray-900 dark:text-gray-100"
-                                      x-text="seleccionado.nombre_producto"></span>
-
-                                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700
-                                             dark:bg-blue-500/10 dark:text-blue-300">
-                                    <span x-text="seleccionado.marca"></span>
-                                    <span class="opacity-60">·</span>
-                                    <span x-text="seleccionado.modelo"></span>
-                                </span>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
-                                <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Repisas iluminadas</p>
-                                    <p class="font-bold text-gray-900 dark:text-gray-100"
-                                       x-text="seleccionado.repisas_iluminadas ?? '—'"></p>
-                                </div>
-
-                                <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Refrigerante</p>
-                                    <p class="font-bold text-gray-900 dark:text-gray-100"
-                                       x-text="seleccionado.refrigerante ?? '—'"></p>
-                                </div>
-
-                                <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Dimensiones (L×P×A)</p>
-                                    <p class="font-bold text-gray-900 dark:text-gray-100">
-                                        <span x-text="seleccionado.longitud ?? '—'"></span>
-                                        <span class="opacity-60">×</span>
-                                        <span x-text="seleccionado.profundidad ?? '—'"></span>
-                                        <span class="opacity-60">×</span>
-                                        <span x-text="seleccionado.altura ?? '—'"></span>
-                                    </p>
-                                </div>
-
-                                <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Precios base</p>
-                                    <p class="font-bold text-gray-900 dark:text-gray-100">
-                                        V: <span x-text="'$' + Number(seleccionado.precio_base_venta || 0).toLocaleString('es-CO')"></span>
-                                        <span class="opacity-60">·</span>
-                                        C: <span x-text="'$' + Number(seleccionado.precio_base_costo || 0).toLocaleString('es-CO')"></span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Descripción</p>
-                                <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed"
-                                   x-text="seleccionado.descripcion ?? 'Sin descripción'"></p>
-                            </div>
-
-                        </div>
-                    </template>
-
-                    <template x-if="!seleccionado">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Selecciona un producto para ver su ficha.
+                @if(!$hayDisponibles)
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-300">
+                            Ya agregaste todos los productos disponibles a esta cotización.
                         </p>
-                    </template>
-                </div>
-            </div>
+                    </div>
+                @else
+                    <form method="POST" action="{{ route('admin.cotizaciones.items.store', $cotizacion->id) }}"
+                          class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                        @csrf
 
-            <div class="md:col-span-1">
-                <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Cantidad</label>
-                <input type="number" name="cantidad" min="1" value="1"
-                       class="w-full rounded-xl dark:bg-gray-900 dark:text-gray-100">
-                @error('cantidad') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-            </div>
+                        <div class="md:col-span-4">
+                            <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Producto</label>
 
-            <div class="md:col-span-1 flex items-end">
-                <button class="w-full px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
-                    + Agregar
-                </button>
-            </div>
-        </form>
-    @endif
-</div>
+                            <select
+                                x-ref="selectProducto"
+                                x-model="seleccionadoId"
+                                name="producto_id"
+                                class="w-full rounded-xl dark:bg-gray-900 dark:text-gray-100"
+                            >
+                                @foreach($productos as $p)
+                                    @continue(in_array($p->id, $productosAgregadosIds ?? []))
+                                    <option value="{{ $p->id }}">
+                                        {{ $p->marca }} - {{ $p->modelo }} ({{ $p->nombre_producto }})
+                                    </option>
+                                @endforeach
+                            </select>
 
+                            @error('producto_id')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+
+                            {{-- FICHA DEL PRODUCTO SELECCIONADO --}}
+                            <div class="mt-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 p-4">
+                                <template x-if="seleccionado">
+                                    <div class="space-y-3">
+
+                                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <span class="text-sm font-extrabold text-gray-900 dark:text-gray-100"
+                                                  x-text="seleccionado.nombre_producto"></span>
+
+                                            <span class="text-xs font-semibold px-2 py-1 rounded-full bg-blue-50 text-blue-700
+                                                         dark:bg-blue-500/10 dark:text-blue-300">
+                                                <span x-text="seleccionado.marca"></span>
+                                                <span class="opacity-60">·</span>
+                                                <span x-text="seleccionado.modelo"></span>
+                                            </span>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+                                            <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Repisas iluminadas</p>
+                                                <p class="font-bold text-gray-900 dark:text-gray-100"
+                                                   x-text="seleccionado.repisas_iluminadas ?? '—'"></p>
+                                            </div>
+
+                                            <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Refrigerante</p>
+                                                <p class="font-bold text-gray-900 dark:text-gray-100"
+                                                   x-text="seleccionado.refrigerante ?? '—'"></p>
+                                            </div>
+
+                                            <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Dimensiones (L×P×A)</p>
+                                                <p class="font-bold text-gray-900 dark:text-gray-100">
+                                                    <span x-text="seleccionado.longitud ?? '—'"></span>
+                                                    <span class="opacity-60">×</span>
+                                                    <span x-text="seleccionado.profundidad ?? '—'"></span>
+                                                    <span class="opacity-60">×</span>
+                                                    <span x-text="seleccionado.altura ?? '—'"></span>
+                                                </p>
+                                            </div>
+
+                                            <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">Precios base</p>
+                                                <p class="font-bold text-gray-900 dark:text-gray-100">
+                                                    V: <span x-text="'$' + Number(seleccionado.precio_base_venta || 0).toLocaleString('es-CO')"></span>
+                                                    <span class="opacity-60">·</span>
+                                                    C: <span x-text="'$' + Number(seleccionado.precio_base_costo || 0).toLocaleString('es-CO')"></span>
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="rounded-xl bg-white/70 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 p-3">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">Descripción</p>
+                                            <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed"
+                                               x-text="seleccionado.descripcion ?? 'Sin descripción'"></p>
+                                        </div>
+
+                                    </div>
+                                </template>
+
+                                <template x-if="!seleccionado">
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                                        Selecciona un producto para ver su ficha.
+                                    </p>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-1">
+                            <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Cantidad</label>
+                            <input type="number" name="cantidad" min="1" value="1"
+                                   class="w-full rounded-xl dark:bg-gray-900 dark:text-gray-100">
+                            @error('cantidad') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="md:col-span-1 flex items-end">
+                            <button class="w-full px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                                + Agregar
+                            </button>
+                        </div>
+                    </form>
+                @endif
+            </div>
 
             {{-- LISTA DE LÍNEAS --}}
             <div class="space-y-6">
@@ -366,6 +364,63 @@
                 </p>
             </div>
 
+            {{-- ✅ BOTÓN PRO: ENVIAR POR CORREO (IMPLEMENTADO AQUÍ) --}}
+            <div class="mt-8 flex justify-end">
+                <form
+                    method="POST"
+                    action="{{ route('admin.cotizaciones.enviarCorreo', $cotizacion->id) }}"
+                    x-data="{ loading: false }"
+                    x-on:submit="loading = true"
+                >
+                    @csrf
+
+                    <button
+                        type="submit"
+                        :disabled="loading"
+                        class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl
+                               bg-gradient-to-r from-indigo-600 to-blue-600
+                               hover:from-indigo-700 hover:to-blue-700
+                               text-white font-extrabold text-sm
+                               shadow-lg hover:shadow-xl
+                               transition-all duration-200
+                               transform hover:-translate-y-0.5 active:translate-y-0
+                               disabled:opacity-60 disabled:cursor-not-allowed
+                               focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-2
+                               dark:focus:ring-offset-gray-900"
+                    >
+                        {{-- ÍCONO ENVIAR --}}
+                        <svg x-show="!loading"
+                             class="w-5 h-5"
+                             fill="none"
+                             viewBox="0 0 24 24"
+                             stroke="currentColor">
+                            <path stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="2"
+                                  d="M3 10l9-6 9 6-9 6-9-6zm0 0v10l9-6 9 6V10" />
+                        </svg>
+
+                        {{-- SPINNER --}}
+                        <svg x-show="loading"
+                             class="w-5 h-5 animate-spin"
+                             viewBox="0 0 24 24"
+                             fill="none">
+                            <circle class="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    stroke-width="4"></circle>
+                            <path class="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>
+
+                        <span x-text="loading ? 'Enviando cotización…' : 'Enviar por correo'"></span>
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
 
@@ -459,13 +514,5 @@
             </div>
         </div>
     </div>
-
-<form method="POST" action="{{ route('admin.cotizaciones.enviarCorreo', $cotizacion->id) }}">
-    @csrf
-    <button class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
-        Enviar por correo
-    </button>
-</form>
-
 
 </x-app-layout>

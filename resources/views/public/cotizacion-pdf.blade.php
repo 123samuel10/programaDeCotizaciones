@@ -6,22 +6,38 @@
     <style>
         @page { margin: 28px; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color:#111; }
+
         .header { border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 16px; }
         .brand { font-size: 16px; font-weight: 800; }
         .muted { color:#555; }
+
         .box { border:1px solid #ddd; border-radius:10px; padding:12px; margin-bottom: 12px; }
         .grid { width:100%; }
         .grid td { vertical-align: top; }
         .right { text-align:right; }
+
         table.items { width:100%; border-collapse: collapse; margin-top: 10px; }
         table.items th { background:#f3f4f6; padding:8px; text-align:left; border:1px solid #e5e7eb; font-size: 11px; }
         table.items td { padding:8px; border:1px solid #e5e7eb; }
+
         .badge { display:inline-block; padding:3px 8px; border-radius:999px; font-size:10px; font-weight:700; background:#f3f4f6; }
+
         .totalBox { background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px; padding:14px; }
         .totalBig { font-size: 18px; font-weight: 900; }
+
         ul { margin: 6px 0 0 16px; padding:0; }
         li { margin: 2px 0; }
+
         .footer { margin-top: 18px; font-size: 10px; color:#666; border-top:1px solid #ddd; padding-top: 10px; }
+
+        /* Bloque ficha técnica (DomPDF friendly) */
+        .tech { margin-top:8px; padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px; background:#f9fafb; }
+        .techTitle { font-size:11px; font-weight:800; margin-bottom:6px; }
+        .techTable { width:100%; border-collapse:collapse; font-size:11px; }
+        .techKey { padding:2px 0; color:#6b7280; width:42%; }
+        .techVal { padding:2px 0; font-weight:700; }
+
+        .desc { margin-top:6px; }
     </style>
 </head>
 <body>
@@ -79,9 +95,25 @@
         @foreach($c->items as $it)
             @php
                 $p = $it->producto;
-                $baseLinea = (float)$it->precio_base_venta * (int)$it->cantidad;
-                $adicLinea = (float)$it->opciones->sum('subtotal_venta');
+
+                $baseLinea  = (float)$it->precio_base_venta * (int)$it->cantidad;
+                $adicLinea  = (float)$it->opciones->sum('subtotal_venta');
                 $totalLinea = $baseLinea + $adicLinea;
+
+                // Ficha técnica
+                $tieneFicha =
+                    !empty($p->descripcion) ||
+                    !is_null($p->repisas_iluminadas) ||
+                    !empty($p->refrigerante) ||
+                    !is_null($p->longitud) ||
+                    !is_null($p->profundidad) ||
+                    !is_null($p->altura);
+
+                $dim = [];
+                if(!is_null($p->longitud)) $dim[] = 'L: '.(int)$p->longitud.' cm';
+                if(!is_null($p->profundidad)) $dim[] = 'P: '.(int)$p->profundidad.' cm';
+                if(!is_null($p->altura)) $dim[] = 'A: '.(int)$p->altura.' cm';
+                $dimTexto = implode(' · ', $dim);
             @endphp
 
             <tr>
@@ -89,6 +121,43 @@
                     <b>{{ $p->nombre_producto ?? 'Producto' }}</b><br>
                     <span class="muted">{{ $p->marca ?? '—' }} · {{ $p->modelo ?? '—' }}</span>
 
+                    {{-- Descripción --}}
+                    @if(!empty($p->descripcion))
+                        <div class="muted desc">
+                            <b>Descripción:</b> {{ $p->descripcion }}
+                        </div>
+                    @endif
+
+                    {{-- Ficha técnica (solo si hay algo para mostrar) --}}
+                    @if($tieneFicha)
+                        <div class="tech">
+                            <div class="techTitle">FICHA TÉCNICA</div>
+                            <table class="techTable">
+                                @if(!is_null($p->repisas_iluminadas))
+                                    <tr>
+                                        <td class="techKey">Repisas iluminadas</td>
+                                        <td class="techVal">{{ (int)$p->repisas_iluminadas }}</td>
+                                    </tr>
+                                @endif
+
+                                @if(!empty($p->refrigerante))
+                                    <tr>
+                                        <td class="techKey">Refrigerante</td>
+                                        <td class="techVal">{{ $p->refrigerante }}</td>
+                                    </tr>
+                                @endif
+
+                                @if($dimTexto !== '')
+                                    <tr>
+                                        <td class="techKey">Dimensiones</td>
+                                        <td class="techVal">{{ $dimTexto }}</td>
+                                    </tr>
+                                @endif
+                            </table>
+                        </div>
+                    @endif
+
+                    {{-- Adiciones --}}
                     @if($it->opciones->count())
                         <div class="muted" style="margin-top:6px;">
                             <b>Adiciones:</b>
