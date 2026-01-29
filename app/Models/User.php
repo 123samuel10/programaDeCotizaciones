@@ -39,5 +39,9 @@ public function ventas()
 {
     return $this->hasMany(\App\Models\Venta::class, 'user_id');
 }
+public function seguimientoseventos()
+{
+    return $this->hasMany(\App\Models\SeguimientoEvento::class, 'creado_por');
+}
 
 }

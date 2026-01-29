@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PagoVentaController extends Controller
 {
-    private function validarCliente()
+ private function validarCliente()
     {
         $u = Auth::user();
         if (!$u) abort(403, 'Debes iniciar sesión.');
@@ -37,7 +37,14 @@ class PagoVentaController extends Controller
             'metodo_pago' => $request->metodo_pago,
         ]);
 
-        return back()->with('success', 'Método de pago guardado.');
+        // ✅ Volver a la lista ABRIENDO el modal correcto y anclando al pago
+        $prev = url()->previous();
+        $sep  = str_contains($prev, '?') ? '&' : '?';
+
+        return redirect()
+            ->to($prev . $sep . 'open=' . $venta->cotizacion_id . '#pago-' . $venta->id)
+            ->with('pago_step', $request->metodo_pago)          // efectivo | transferencia
+            ->with('open_detalle', $venta->cotizacion_id);      // para asegurar apertura del modal
     }
 
     public function subirComprobante(Request $request, Venta $venta)
@@ -63,6 +70,13 @@ class PagoVentaController extends Controller
             'comprobante_estado' => 'pendiente_revision',
         ]);
 
-        return back()->with('success', 'Comprobante enviado. Queda pendiente de revisión.');
+        // ✅ Mismo truco: mantener al cliente dentro del modal en el pago
+        $prev = url()->previous();
+        $sep  = str_contains($prev, '?') ? '&' : '?';
+
+        return redirect()
+            ->to($prev . $sep . 'open=' . $venta->cotizacion_id . '#pago-' . $venta->id)
+            ->with('open_detalle', $venta->cotizacion_id)
+            ->with('success', 'Comprobante enviado. Queda pendiente de revisión.');
     }
 }

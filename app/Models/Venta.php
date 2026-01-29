@@ -44,4 +44,11 @@ class Venta extends Model
     {
         return $this->hasMany(VentaItem::class, 'venta_id');
     }
+
+
+public function seguimiento()
+{
+    return $this->hasOne(Seguimiento::class, 'venta_id');
+}
+
 }

@@ -12,10 +12,35 @@
                 </p>
             </div>
 
-            <a href="{{ route('admin.ventas.index') }}"
+            {{-- <a href="{{ route('admin.ventas.index') }}"
                class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
                 ← Volver
-            </a>
+            </a> --}}
+
+            @php
+    $seg = $venta->seguimiento;
+@endphp
+
+<div class="flex gap-2">
+    @if($seg)
+        <a href="{{ route('admin.seguimientos.show', $seg->id) }}"
+           class="px-4 py-2 rounded-xl bg-gray-900 text-white font-extrabold hover:bg-gray-800
+                  dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+            Abrir seguimiento
+        </a>
+    @else
+        <a href="{{ route('admin.ventas.seguimiento.create', $venta->id) }}"
+           class="px-4 py-2 rounded-xl bg-blue-600 text-white font-extrabold hover:bg-blue-700">
+            Crear seguimiento
+        </a>
+    @endif
+
+    <a href="{{ route('admin.ventas.index') }}"
+       class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
+        ← Volver
+    </a>
+</div>
+
         </div>
     </x-slot>
 
@@ -105,164 +130,202 @@
             </div>
 
             {{--  BLOQUE PRO DE PAGO + COMPROBANTE --}}
-            <div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-extrabold text-gray-900 dark:text-gray-100">
-                            Pago del cliente
-                        </h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Método elegido y evidencia (si aplica).
-                        </p>
-                    </div>
+{{--  BLOQUE PRO DE PAGO + COMPROBANTE (CORREGIDO) --}}
+<div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">
+    <div class="flex items-start justify-between gap-4">
+        <div>
+            <h3 class="text-lg font-extrabold text-gray-900 dark:text-gray-100">
+                Pago del cliente
+            </h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                Método elegido y evidencia (si aplica).
+            </p>
+        </div>
 
-                    @if($tieneComp)
-                        <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 inline-flex {{ $badgeComp }}">
-                            COMPROBANTE: {{ strtoupper(str_replace('_',' ', $compEstado ?: 'pendiente_revision')) }}
-                        </span>
-                    @endif
+        {{-- Badge de comprobante SOLO si aplica (transferencia + tiene archivo) --}}
+        @if(($venta->metodo_pago ?? null) === 'transferencia' && $tieneComp)
+            <span class="text-xs font-extrabold px-3 py-1 rounded-full ring-1 inline-flex {{ $badgeComp }}">
+                COMPROBANTE: {{ strtoupper(str_replace('_',' ', $compEstado ?: 'pendiente_revision')) }}
+            </span>
+        @endif
+    </div>
+
+    <div class="mt-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+        {{-- Info método --}}
+        <div class="lg:col-span-5 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+            <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Método</div>
+
+            @if(empty($venta->metodo_pago))
+                <div class="mt-1 text-lg font-extrabold text-gray-900 dark:text-gray-100">
+                    — Sin definir —
+                </div>
+                <div class="mt-3 p-4 rounded-2xl bg-yellow-50 border border-yellow-100 text-yellow-800
+                            dark:bg-yellow-500/10 dark:border-yellow-500/20 dark:text-yellow-200">
+                    <div class="font-extrabold">El cliente aún no ha elegido método</div>
+                    <div class="text-sm mt-1">Cuando elija “transferencia” o “efectivo”, se verá aquí.</div>
+                </div>
+            @else
+                <div class="mt-1 text-lg font-extrabold text-gray-900 dark:text-gray-100">
+                    {{ strtoupper($metodo) }}
                 </div>
 
-                <div class="mt-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
-
-                    {{-- Info método --}}
-                    <div class="lg:col-span-5 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
-                        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Método</div>
-                        <div class="mt-1 text-lg font-extrabold text-gray-900 dark:text-gray-100">
-                            {{ strtoupper($metodo) }}
-                        </div>
-
-                        @if($ref)
-                            <div class="mt-3 text-sm text-gray-700 dark:text-gray-200">
-                                <span class="font-bold">Referencia:</span> {{ $ref }}
-                            </div>
-                        @endif
-
-                        @if($metodo === 'transferencia')
-                            <div class="mt-4 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 p-4">
-                                <div class="font-extrabold text-gray-900 dark:text-gray-100">Datos de cuenta (lo que ve el cliente)</div>
-                                <div class="mt-2 text-sm text-gray-700 dark:text-gray-200 space-y-1">
-                                    <div><span class="font-bold">Banco:</span> {{ $pagoBanco }}</div>
-                                    <div><span class="font-bold">Cuenta:</span> {{ $pagoCuenta }}</div>
-                                    <div><span class="font-bold">Titular:</span> {{ $pagoTitular }}</div>
-                                </div>
-                            </div>
-                        @endif
-
-                        @if($tieneComp && $compSubido)
-                            <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                                Subido: {{ \Carbon\Carbon::parse($compSubido)->format('Y-m-d H:i') }}
-                            </div>
-                        @endif
+                @if($ref)
+                    <div class="mt-3 text-sm text-gray-700 dark:text-gray-200">
+                        <span class="font-bold">Referencia:</span> {{ $ref }}
                     </div>
+                @endif
 
-                    {{-- Evidencia --}}
-                    <div class="lg:col-span-7 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Evidencia</div>
-                                <div class="mt-1 font-extrabold text-gray-900 dark:text-gray-100">
-                                    Comprobante
-                                </div>
-                            </div>
-
-                            @if($tieneComp)
-                                <a href="{{ asset('storage/'.$compPath) }}" target="_blank"
-                                   class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200
-                                          dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-extrabold">
-                                    Abrir archivo
-                                </a>
-                            @endif
+                {{-- Si es transferencia, mostramos datos de cuenta --}}
+                @if($metodo === 'transferencia')
+                    <div class="mt-4 rounded-2xl bg-gray-50 dark:bg-gray-900/30 border border-gray-200 dark:border-gray-700 p-4">
+                        <div class="font-extrabold text-gray-900 dark:text-gray-100">
+                            Datos de cuenta (lo que ve el cliente)
                         </div>
+                        <div class="mt-2 text-sm text-gray-700 dark:text-gray-200 space-y-1">
+                            <div><span class="font-bold">Banco:</span> {{ $pagoBanco }}</div>
+                            <div><span class="font-bold">Cuenta:</span> {{ $pagoCuenta }}</div>
+                            <div><span class="font-bold">Titular:</span> {{ $pagoTitular }}</div>
+                        </div>
+                    </div>
+                @endif
 
-                        @if(!$tieneComp)
-                            <div class="mt-4 p-4 rounded-2xl bg-yellow-50 border border-yellow-100 text-yellow-800
-                                        dark:bg-yellow-500/10 dark:border-yellow-500/20 dark:text-yellow-200">
-                                <div class="font-extrabold">Sin comprobante</div>
-                                <div class="text-sm mt-1">El cliente aún no ha subido evidencia.</div>
+                {{-- Si es efectivo, aclaración PRO --}}
+                @if($metodo === 'efectivo')
+                    <div class="mt-4 p-4 rounded-2xl bg-green-50 border border-green-100 text-green-800
+                                dark:bg-green-500/10 dark:border-green-500/20 dark:text-green-200">
+                        <div class="font-extrabold">Pago en efectivo</div>
+                        <div class="text-sm mt-1">
+                            En efectivo <b>no se solicita comprobante</b>. La confirmación se hace cuando se registre el pago.
+                        </div>
+                    </div>
+                @endif
+
+                @if($tieneComp && $compSubido)
+                    <div class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                        Subido: {{ \Carbon\Carbon::parse($compSubido)->format('Y-m-d H:i') }}
+                    </div>
+                @endif
+            @endif
+        </div>
+
+        {{-- Evidencia: SOLO si es transferencia --}}
+        <div class="lg:col-span-7 rounded-2xl border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Evidencia</div>
+                    <div class="mt-1 font-extrabold text-gray-900 dark:text-gray-100">
+                        Comprobante
+                    </div>
+                </div>
+
+                @if($metodo === 'transferencia' && $tieneComp)
+                    <a href="{{ asset('storage/'.$compPath) }}" target="_blank"
+                       class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200
+                              dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 font-extrabold">
+                        Abrir archivo
+                    </a>
+                @endif
+            </div>
+
+            {{-- Si NO es transferencia, no mostramos comprobante --}}
+            @if($metodo !== 'transferencia')
+                <div class="mt-4 p-4 rounded-2xl bg-gray-50 border border-gray-200 text-gray-700
+                            dark:bg-gray-900/30 dark:border-gray-700 dark:text-gray-200">
+                    <div class="font-extrabold">No aplica comprobante</div>
+                    <div class="text-sm mt-1">
+                        El comprobante solo se solicita cuando el método de pago es <b>transferencia</b>.
+                    </div>
+                </div>
+
+            @else
+                {{-- Aquí sí aplica transferencia: mostrar si hay o no hay --}}
+                @if(!$tieneComp)
+                    <div class="mt-4 p-4 rounded-2xl bg-yellow-50 border border-yellow-100 text-yellow-800
+                                dark:bg-yellow-500/10 dark:border-yellow-500/20 dark:text-yellow-200">
+                        <div class="font-extrabold">Pendiente: sin comprobante</div>
+                        <div class="text-sm mt-1">El cliente aún no ha subido evidencia.</div>
+                    </div>
+                @else
+                    {{-- Preview --}}
+                    <div class="mt-4">
+                        @if($isImage)
+                            <img src="{{ asset('storage/'.$compPath) }}"
+                                 alt="Comprobante"
+                                 class="w-full max-h-[420px] object-contain rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                        @elseif($isPdf)
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <iframe src="{{ asset('storage/'.$compPath) }}" class="w-full h-[420px]"></iframe>
                             </div>
                         @else
-                            {{-- Preview --}}
-                            <div class="mt-4">
-                                @if($isImage)
-                                    <img src="{{ asset('storage/'.$compPath) }}"
-                                         alt="Comprobante"
-                                         class="w-full max-h-[420px] object-contain rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-                                @elseif($isPdf)
-                                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                        <iframe src="{{ asset('storage/'.$compPath) }}" class="w-full h-[420px]"></iframe>
-                                    </div>
-                                @else
-                                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                                        Archivo subido. Usa “Abrir archivo” para verlo.
-                                    </div>
-                                @endif
-                            </div>
-
-                            @if($compEstado === 'rechazado' && $compNota)
-                                <div class="mt-4 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-800
-                                            dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-200">
-                                    <div class="font-extrabold">Última revisión: RECHAZADO</div>
-                                    <div class="text-sm mt-1">{{ $compNota }}</div>
-                                </div>
-                            @endif
-                        @endif
-
-                        {{--  Acciones de revisión --}}
-                        @if($tieneComp && $estado !== 'pagada')
-                            <div class="mt-5 border-t border-gray-200 dark:border-gray-700 pt-5">
-                                <div class="font-extrabold text-gray-900 dark:text-gray-100">
-                                    Revisión del comprobante
-                                </div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                    Aprueba para marcar la venta como <b>PAGADA</b>. Si rechazas, escribe el motivo.
-                                </p>
-
-                                <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-3">
-                                    {{-- Aprobar --}}
-{{-- Aprobar --}}
-<form method="POST" action="{{ route('admin.ventas.decision', $venta->id) }}" class="lg:col-span-4">
-    @csrf
-    @method('PUT')
-    <input type="hidden" name="decision" value="aceptar">
-
-    <button class="w-full px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-extrabold">
-        Aprobar comprobante
-    </button>
-</form>
-
-{{-- Rechazar --}}
-<form method="POST" action="{{ route('admin.ventas.decision', $venta->id) }}"
-      class="lg:col-span-8 grid grid-cols-1 lg:grid-cols-12 gap-3">
-    @csrf
-    @method('PUT')
-    <input type="hidden" name="decision" value="rechazar">
-
-    <div class="lg:col-span-9">
-        <input
-            type="text"
-            name="nota"
-            maxlength="1000"
-            placeholder="Motivo del rechazo (ej: imagen borrosa, falta valor, no coincide fecha...)"
-            class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-            required
-        >
-    </div>
-
-    <div class="lg:col-span-3">
-        <button class="w-full px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold">
-            Rechazar
-        </button>
-    </div>
-</form>
-
-                                </div>
+                            <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                                Archivo subido. Usa “Abrir archivo” para verlo.
                             </div>
                         @endif
-
                     </div>
-                </div>
-            </div>
+
+                    @if($compEstado === 'rechazado' && $compNota)
+                        <div class="mt-4 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-800
+                                    dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-200">
+                            <div class="font-extrabold">Última revisión: RECHAZADO</div>
+                            <div class="text-sm mt-1">{{ $compNota }}</div>
+                        </div>
+                    @endif
+                @endif
+
+                {{-- Acciones de revisión: SOLO si transferencia + tiene comprobante + pendiente_revision --}}
+                @if($tieneComp && ($compEstado ?? null) === 'pendiente_revision' && $estado !== 'pagada')
+                    <div class="mt-5 border-t border-gray-200 dark:border-gray-700 pt-5">
+                        <div class="font-extrabold text-gray-900 dark:text-gray-100">
+                            Revisión del comprobante
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Aprueba para marcar la venta como <b>PAGADA</b>. Si rechazas, escribe el motivo.
+                        </p>
+
+                        <div class="mt-4 grid grid-cols-1 lg:grid-cols-12 gap-3">
+                            {{-- Aprobar --}}
+                            <form method="POST" action="{{ route('admin.ventas.decision', $venta->id) }}" class="lg:col-span-4">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="decision" value="aceptar">
+                                <button class="w-full px-4 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-white font-extrabold">
+                                    Aprobar comprobante
+                                </button>
+                            </form>
+
+                            {{-- Rechazar --}}
+                            <form method="POST" action="{{ route('admin.ventas.decision', $venta->id) }}"
+                                  class="lg:col-span-8 grid grid-cols-1 lg:grid-cols-12 gap-3">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="decision" value="rechazar">
+
+                                <div class="lg:col-span-9">
+                                    <input
+                                        type="text"
+                                        name="nota"
+                                        maxlength="1000"
+                                        placeholder="Motivo del rechazo (ej: imagen borrosa, falta valor, no coincide fecha...)"
+                                        class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="lg:col-span-3">
+                                    <button class="w-full px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold">
+                                        Rechazar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                @endif
+            @endif
+        </div>
+    </div>
+</div>
+
 
             {{-- Actualizar estado (manual) --}}
             <div class="mt-6 bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700">

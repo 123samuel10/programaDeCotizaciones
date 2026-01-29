@@ -82,6 +82,7 @@ class VentaController extends Controller
             'usuario',
             'cotizacion',
             'items.opciones',
+             'seguimiento', // agrega esto
         ]);
 
         return view('admin.ventas.show', compact('venta'));

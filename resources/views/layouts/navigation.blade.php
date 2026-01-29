@@ -1,3 +1,5 @@
+{{-- resources/views/layouts/navigation.blade.php --}}
+
 <nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -15,7 +17,6 @@
 
                 <!-- Links Desktop -->
                 <div class="hidden sm:flex sm:items-center sm:ms-10 gap-2">
-
                     @auth
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             Panel
@@ -37,6 +38,20 @@
                             <x-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
                                 Clientes
                             </x-nav-link>
+
+                            {{-- ✅ Seguimientos (solo si existe la ruta) --}}
+                            @if(Route::has('admin.seguimientos.index'))
+                                <x-nav-link :href="route('admin.seguimientos.index')" :active="request()->routeIs('admin.seguimientos.*')">
+                                    Seguimientos
+                                </x-nav-link>
+                            @endif
+
+                            {{-- ✅ Proveedores (solo si existe la ruta) --}}
+                            @if(Route::has('admin.proveedores.index'))
+                                <x-nav-link :href="route('admin.proveedores.index')" :active="request()->routeIs('admin.proveedores.*')">
+                                    Proveedores
+                                </x-nav-link>
+                            @endif
                         @else
                             <x-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
                                 Mis cotizaciones
@@ -45,18 +60,15 @@
                     @endauth
 
                     @guest
-                        {{-- Menú para links públicos --}}
                         <x-nav-link :href="route('login')" :active="request()->routeIs('login')">
                             Iniciar sesión
                         </x-nav-link>
                     @endguest
-
                 </div>
             </div>
 
             <!-- RIGHT -->
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
-
                 @auth
                     @php $rol = auth()->user()->role ?? 'cliente'; @endphp
 
@@ -88,16 +100,23 @@
                                     </div>
                                 </div>
 
-                                <svg class="fill-current h-4 w-4 text-gray-500 dark:text-gray-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                <svg class="fill-current h-4 w-4 text-gray-500 dark:text-gray-300"
+                                     xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                          clip-rule="evenodd" />
                                 </svg>
                             </button>
                         </x-slot>
 
                         <x-slot name="content">
                             <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                                <div class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ auth()->user()->name }}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">{{ auth()->user()->email }}</div>
+                                <div class="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                    {{ auth()->user()->name }}
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ auth()->user()->email }}
+                                </div>
                             </div>
 
                             <x-dropdown-link :href="route('profile.edit')">
@@ -124,7 +143,6 @@
                         Iniciar sesión
                     </a>
                 @endguest
-
             </div>
 
             <!-- Hamburger -->
@@ -149,7 +167,6 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-
             @auth
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                     Panel
@@ -171,6 +188,20 @@
                     <x-responsive-nav-link :href="route('admin.clientes.index')" :active="request()->routeIs('admin.clientes.*')">
                         Clientes
                     </x-responsive-nav-link>
+
+                    {{-- ✅ Seguimientos mobile --}}
+                    @if(Route::has('admin.seguimientos.index'))
+                        <x-responsive-nav-link :href="route('admin.seguimientos.index')" :active="request()->routeIs('admin.seguimientos.*')">
+                            Seguimientos
+                        </x-responsive-nav-link>
+                    @endif
+
+                    {{-- ✅ Proveedores mobile --}}
+                    @if(Route::has('admin.proveedores.index'))
+                        <x-responsive-nav-link :href="route('admin.proveedores.index')" :active="request()->routeIs('admin.proveedores.*')">
+                            Proveedores
+                        </x-responsive-nav-link>
+                    @endif
                 @else
                     <x-responsive-nav-link :href="route('cliente.cotizaciones.index')" :active="request()->routeIs('cliente.cotizaciones.*')">
                         Mis cotizaciones
@@ -183,15 +214,18 @@
                     Iniciar sesión
                 </x-responsive-nav-link>
             @endguest
-
         </div>
 
         <!-- Responsive Settings Options -->
         @auth
             <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
                 <div class="px-4">
-                    <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ auth()->user()->name }}</div>
-                    <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+                    <div class="font-medium text-base text-gray-800 dark:text-gray-200">
+                        {{ auth()->user()->name }}
+                    </div>
+                    <div class="font-medium text-sm text-gray-500">
+                        {{ auth()->user()->email }}
+                    </div>
                 </div>
 
                 <div class="mt-3 space-y-1">

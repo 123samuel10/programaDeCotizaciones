@@ -163,4 +163,6 @@ class CotizacionClienteController extends Controller
 
         return back()->with('success', 'Cotización rechazada correctamente.');
     }
+
+
 }

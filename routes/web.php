@@ -3,6 +3,8 @@
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\CotizacionController;
 use App\Http\Controllers\Admin\ProductoController;
+use App\Http\Controllers\Admin\ProveedorController;
+use App\Http\Controllers\Admin\SeguimientoController;
 use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
@@ -29,10 +31,14 @@ Route::middleware('auth')->group(function () {
 });
 
 
+
+
 Route::resourceParameters([
     'cotizaciones' => 'cotizacion',
     'productos' => 'producto',
+    'proveedores' => 'proveedor',  // ✅ FIX
 ]);
+
 
 Route::prefix('admin')->as('admin.')->group(function () {
 
@@ -73,12 +79,50 @@ Route::put('ventas/{venta}', [VentaController::class, 'update'])->name('ventas.u
 
 Route::post('ventas/{venta}/decision', [VentaController::class, 'decisionPago'])
     ->name('ventas.decision');
+
     Route::put('ventas/{venta}/decision', [VentaController::class, 'decisionPago'])
     ->name('ventas.decision');
 
 
     Route::post('cotizaciones/{cotizacion}/enviar-correo', [CotizacionController::class, 'enviarPorCorreo'])
     ->name('cotizaciones.enviarCorreo');
+
+
+
+
+
+
+
+
+    //seguimientosss
+    // Proveedores
+Route::resource('proveedores', ProveedorController::class);
+
+// Seguimientos
+Route::get('seguimientos', [SeguimientoController::class, 'index'])->name('seguimientos.index');
+Route::get('seguimientos/{seguimiento}', [SeguimientoController::class, 'show'])->name('seguimientos.show');
+Route::put('seguimientos/{seguimiento}', [SeguimientoController::class, 'update'])->name('seguimientos.update');
+
+// Crear seguimiento desde Venta
+Route::get('ventas/{venta}/seguimiento/crear', [SeguimientoController::class, 'createFromVenta'])
+    ->name('ventas.seguimiento.create');
+
+Route::post('ventas/{venta}/seguimiento', [SeguimientoController::class, 'storeFromVenta'])
+    ->name('ventas.seguimiento.store');
+
+// Contenedores
+Route::post('seguimientos/{seguimiento}/contenedores', [SeguimientoController::class, 'contenedorStore'])
+    ->name('seguimientos.contenedores.store');
+
+Route::delete('seguimientos/{seguimiento}/contenedores/{contenedor}', [SeguimientoController::class, 'contenedorDestroy'])
+    ->name('seguimientos.contenedores.destroy');
+
+// Eventos
+Route::post('seguimientos/{seguimiento}/eventos', [SeguimientoController::class, 'eventoStore'])
+    ->name('seguimientos.eventos.store');
+
+Route::delete('seguimientos/{seguimiento}/eventos/{evento}', [SeguimientoController::class, 'eventoDestroy'])
+    ->name('seguimientos.eventos.destroy');
 
 });
 
@@ -89,6 +133,8 @@ Route::prefix('cliente')->name('cliente.')->group(function () {
 
     Route::get('cotizaciones', [CotizacionClienteController::class, 'index'])
         ->name('cotizaciones.index');
+        Route::get('cotizaciones/{cotizacion}/detalle', [CotizacionClienteController::class, 'detalle'])
+        ->name('cotizaciones.detalle');
 
     Route::post('cotizaciones/{cotizacion}/aceptar', [CotizacionClienteController::class, 'aceptar'])
         ->name('cotizaciones.aceptar');
@@ -103,50 +149,6 @@ Route::post('ventas/{venta}/comprobante', [PagoVentaController::class, 'subirCom
     ->name('ventas.comprobante');
 });
 
-
-// Route::prefix('c')->name('public.cotizacion.')->group(function () {
-
-//     // Ver cotización (página pública)
-//     Route::get('{token}', [PublicCotizacionController::class, 'ver'])
-//         ->name('ver');
-
-//     // Confirmaciones (pantalla antes de ejecutar)
-//     Route::get('{token}/confirmar-aceptar', [PublicCotizacionController::class, 'confirmarAceptar'])
-//         ->name('confirmar.aceptar');
-
-//     Route::get('{token}/confirmar-rechazar', [PublicCotizacionController::class, 'confirmarRechazar'])
-//         ->name('confirmar.rechazar');
-
-//     // Ejecutar acciones (POST, porque cambian estado y crean venta)
-//     Route::post('{token}/aceptar', [PublicCotizacionController::class, 'aceptar'])
-//         ->name('aceptar.post');
-
-//     Route::post('{token}/rechazar', [PublicCotizacionController::class, 'rechazar'])
-//         ->name('rechazar.post');
-
-//     // PDF descarga
-//     Route::get('{token}/pdf', [PublicCotizacionController::class, 'pdf'])
-//         ->name('pdf');
-// });
-
-// Route::get('/cotizacion/{token}', [PublicCotizacionController::class, 'ver'])
-//     ->name('public.cotizacion.ver');
-
-// // Confirmación (pantalla)
-// Route::get('/cotizacion/{token}/aceptar', [PublicCotizacionController::class, 'confirmarAceptar'])
-//     ->name('public.cotizacion.aceptar');
-
-// Route::get('/cotizacion/{token}/rechazar', [PublicCotizacionController::class, 'confirmarRechazar'])
-//     ->name('public.cotizacion.rechazar');
-
-// // Acción real (POST)
-// Route::post('/cotizacion/{token}/aceptar', [PublicCotizacionController::class, 'aceptar'])
-//     ->name('public.cotizacion.aceptar.post');
-
-// Route::post('/cotizacion/{token}/rechazar', [PublicCotizacionController::class, 'rechazar'])
-//     ->name('public.cotizacion.rechazar.post');
-// Route::get('/cotizacion/{token}/pdf', [PublicCotizacionController::class, 'pdf'])
-//     ->name('public.cotizacion.pdf');
 
 Route::prefix('cotizacion')->name('public.cotizacion.')->group(function () {
 
@@ -172,5 +174,12 @@ Route::prefix('cotizacion')->name('public.cotizacion.')->group(function () {
     Route::get('{token}/pdf', [PublicCotizacionController::class, 'pdf'])
         ->name('pdf');
 });
+
+
+
+
+
+
+
 
 require __DIR__.'/auth.php';
