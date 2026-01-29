@@ -43,17 +43,19 @@ class CotizacionController extends Controller
             abort(403, 'Esta cotización ya fue respondida por el cliente y está bloqueada.');
         }
     }
-    public function index()
+ public function index()
 {
     $this->validarAdmin();
 
     $cotizaciones = Cotizacion::with(['usuario'])
         ->withCount('items')
         ->latest()
-        ->get();
+        ->paginate(15)          // 👈 cantidad por página (15, 20, 25...)
+        ->withQueryString();    // 👈 conserva parámetros (ej: page)
 
     return view('admin.cotizaciones.index', compact('cotizaciones'));
 }
+
 
 
     // FORM CREAR

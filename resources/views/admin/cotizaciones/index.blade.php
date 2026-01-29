@@ -37,7 +37,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-700 ring-1 ring-gray-200
                                      dark:bg-gray-700/60 dark:text-gray-200 dark:ring-gray-600">
-                            Total: {{ $cotizaciones->count() }}
+                            Total: {{ $cotizaciones->total() }}
                         </span>
 
                         <span class="text-xs text-gray-500 dark:text-gray-400">
@@ -97,7 +97,10 @@
                                 $clienteNombre = $c->usuario->name ?? '—';
                                 $clienteEmail  = $c->usuario->email ?? '';
                                 $respondidaTxt = $c->respondida_en ? \Carbon\Carbon::parse($c->respondida_en)->format('Y-m-d H:i') : '—';
-                                $lineas        = $c->items_count ?? $c->items()->count();
+
+                                // ✅ con paginate + withCount('items') esto ya viene listo
+                                $lineas        = $c->items_count ?? 0;
+
                                 $totalVenta    = (float) $c->total_venta;
 
                                 // texto para búsqueda (frontend)
@@ -186,6 +189,19 @@
                         @endforelse
                         </tbody>
                     </table>
+
+                    {{-- ✅ PAGINACIÓN (abajo de la tabla) --}}
+                    <div class="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Mostrando <span class="font-semibold">{{ $cotizaciones->firstItem() ?? 0 }}</span>
+                            a <span class="font-semibold">{{ $cotizaciones->lastItem() ?? 0 }}</span>
+                            de <span class="font-semibold">{{ $cotizaciones->total() }}</span>
+                        </p>
+
+                        <div>
+                            {{ $cotizaciones->links() }}
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Footer --}}
