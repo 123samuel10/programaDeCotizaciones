@@ -19,7 +19,7 @@
 
     $created = optional($c->created_at)->format('d/m/Y H:i');
 
-    // ✅ Venta asociada
+    // Venta asociada
     $venta = Venta::where('cotizacion_id', $c->id)->first();
     $ventaEstado = $venta->estado_venta ?? null;
 
@@ -34,7 +34,7 @@
     $preview = $items->take(2);
     $faltan = max(0, $items->count() - $preview->count());
 
-    // ✅ Auto-open modal si viene de seleccionar método / subir comprobante
+    //  Auto-open modal si viene de seleccionar método / subir comprobante
     $abrirEste = (string)request('open') === (string)$c->id
               || (string)session('open_detalle') === (string)$c->id;
 @endphp

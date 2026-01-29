@@ -98,7 +98,7 @@
                                 $clienteEmail  = $c->usuario->email ?? '';
                                 $respondidaTxt = $c->respondida_en ? \Carbon\Carbon::parse($c->respondida_en)->format('Y-m-d H:i') : '—';
 
-                                // ✅ con paginate + withCount('items') esto ya viene listo
+                                // con paginate + withCount('items') esto ya viene listo
                                 $lineas        = $c->items_count ?? 0;
 
                                 $totalVenta    = (float) $c->total_venta;
@@ -190,7 +190,7 @@
                         </tbody>
                     </table>
 
-                    {{-- ✅ PAGINACIÓN (abajo de la tabla) --}}
+                    {{--  PAGINACIÓN (abajo de la tabla) --}}
                     <div class="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <p class="text-xs text-gray-500 dark:text-gray-400">
                             Mostrando <span class="font-semibold">{{ $cotizaciones->firstItem() ?? 0 }}</span>
@@ -213,7 +213,7 @@
         </div>
     </div>
 
-    {{-- ✅ MODAL ELIMINAR COTIZACIÓN --}}
+    {{--  MODAL ELIMINAR COTIZACIÓN --}}
     <div id="deleteQuoteModal"
          class="fixed inset-0 z-50 hidden"
          aria-labelledby="deleteQuoteModalTitle"
@@ -279,7 +279,7 @@
         </div>
     </div>
 
-    {{-- ✅ SCRIPTS (buscar + modal) --}}
+    {{-- SCRIPTS (buscar + modal) --}}
     <script>
         (function () {
             // ===== Buscar =====

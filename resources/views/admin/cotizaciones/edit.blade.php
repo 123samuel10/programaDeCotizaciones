@@ -364,7 +364,7 @@
                 </p>
             </div>
 
-            {{-- ✅ BOTÓN PRO: ENVIAR POR CORREO (IMPLEMENTADO AQUÍ) --}}
+            {{-- BOTÓN PRO: ENVIAR POR CORREO (IMPLEMENTADO AQUÍ) --}}
             <div class="mt-8 flex justify-end">
                 <form
                     method="POST"

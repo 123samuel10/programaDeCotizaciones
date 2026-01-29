@@ -79,7 +79,7 @@
                                 <th class="py-3 px-4 text-left font-extrabold text-gray-700 dark:text-gray-200">Proveedor</th>
                                 <th class="py-3 px-4 text-left font-extrabold text-gray-700 dark:text-gray-200">Estado</th>
 
-                                {{-- ✅ PRO: Fechas en lenguaje humano --}}
+                                {{--  PRO: Fechas en lenguaje humano --}}
                                 <th class="py-3 px-4 text-left font-extrabold text-gray-700 dark:text-gray-200">
                                     Fechas (Salida / Llegada)
                                     <div class="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
@@ -97,7 +97,7 @@
                                     $venta = $s->venta;
                                     $cliente = $venta->usuario ?? null;
 
-                                    // ✅ PRO: faltan días (si hay ETA)
+                                    //  PRO: faltan días (si hay ETA)
                                     $diasParaLlegar = null;
                                     if ($s->eta) {
                                         $diasParaLlegar = now()->startOfDay()->diffInDays($s->eta->startOfDay(), false);
@@ -140,7 +140,7 @@
                                         </div>
                                     </td>
 
-                                    {{-- ✅ PRO: Fechas claras --}}
+                                    {{--  PRO: Fechas claras --}}
                                     <td class="py-3 px-4">
                                         <div class="space-y-1">
                                             <div class="text-sm font-extrabold text-gray-900 dark:text-gray-100">
@@ -155,7 +155,7 @@
                                             Actualizado: {{ $s->updated_at?->format('d/m/Y H:i') }}
                                         </div>
 
-                                        {{-- ✅ PRO: faltan días --}}
+                                        {{--  PRO: faltan días --}}
                                         @if(!is_null($diasParaLlegar))
                                             <div class="mt-1 text-xs font-bold">
                                                 @if($diasParaLlegar > 0)

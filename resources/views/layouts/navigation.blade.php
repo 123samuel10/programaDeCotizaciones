@@ -39,14 +39,14 @@
                                 Clientes
                             </x-nav-link>
 
-                            {{-- ✅ Seguimientos (solo si existe la ruta) --}}
+                            {{--  Seguimientos (solo si existe la ruta) --}}
                             @if(Route::has('admin.seguimientos.index'))
                                 <x-nav-link :href="route('admin.seguimientos.index')" :active="request()->routeIs('admin.seguimientos.*')">
                                     Seguimientos
                                 </x-nav-link>
                             @endif
 
-                            {{-- ✅ Proveedores (solo si existe la ruta) --}}
+                            {{--  Proveedores (solo si existe la ruta) --}}
                             @if(Route::has('admin.proveedores.index'))
                                 <x-nav-link :href="route('admin.proveedores.index')" :active="request()->routeIs('admin.proveedores.*')">
                                     Proveedores
@@ -189,14 +189,14 @@
                         Clientes
                     </x-responsive-nav-link>
 
-                    {{-- ✅ Seguimientos mobile --}}
+                    {{-- Seguimientos mobile --}}
                     @if(Route::has('admin.seguimientos.index'))
                         <x-responsive-nav-link :href="route('admin.seguimientos.index')" :active="request()->routeIs('admin.seguimientos.*')">
                             Seguimientos
                         </x-responsive-nav-link>
                     @endif
 
-                    {{-- ✅ Proveedores mobile --}}
+                    {{-- Proveedores mobile --}}
                     @if(Route::has('admin.proveedores.index'))
                         <x-responsive-nav-link :href="route('admin.proveedores.index')" :active="request()->routeIs('admin.proveedores.*')">
                             Proveedores

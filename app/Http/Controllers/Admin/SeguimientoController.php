@@ -278,4 +278,43 @@ class SeguimientoController extends Controller
             'entregado' => 'Entregado',
         ];
     }
+
+
+    public function contenedorUpdate(Request $request, Seguimiento $seguimiento, Contenedor $contenedor)
+{
+    $this->validarAdmin();
+    if ($contenedor->seguimiento_id !== $seguimiento->id) abort(403);
+
+    $data = $request->validate([
+        'numero_contenedor' => 'nullable|string|max:50',
+        'bl' => 'nullable|string|max:80',
+        'naviera' => 'nullable|string|max:120',
+        'puerto_salida' => 'nullable|string|max:120',
+        'puerto_llegada' => 'nullable|string|max:120',
+        'etd' => 'nullable|date',
+        'eta' => 'nullable|date',
+        'estado' => 'required|string|max:50',
+    ]);
+
+    $cambioEstado = ($contenedor->estado ?? null) !== $data['estado'];
+
+    $contenedor->update($data);
+
+    // Evento PRO si cambió el estado del contenedor
+    if ($cambioEstado) {
+        $label = $this->estadosContenedor()[$data['estado']] ?? $data['estado'];
+
+        SeguimientoEvento::create([
+            'seguimiento_id' => $seguimiento->id,
+            'creado_por' => Auth::id(),
+            'tipo' => 'embarque',
+            'titulo' => 'Estado de contenedor actualizado',
+            'descripcion' => 'Contenedor ' . ($contenedor->numero_contenedor ?? ('#'.$contenedor->id)) . ' → ' . $label,
+            'fecha_evento' => now(),
+        ]);
+    }
+
+    return back()->with('success', 'Contenedor actualizado.');
+}
+
 }

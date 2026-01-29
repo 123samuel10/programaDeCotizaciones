@@ -70,7 +70,7 @@
             </div>
 
             <div class="max-h-[78vh] overflow-y-auto p-5 space-y-6">
-                {{-- ✅ Scroll al pago cuando venimos de seleccionar método o subir comprobante --}}
+                {{--  Scroll al pago cuando venimos de seleccionar método o subir comprobante --}}
                 @if($autoOpen && $venta)
                     <div x-init="
                         setTimeout(() => {
@@ -215,7 +215,7 @@
                     @endforeach
                 </div>
 
-                {{-- ✅ PAGO --}}
+                {{--  PAGO --}}
                 @if($estado === 'aceptada' && $venta)
                     <div id="pago-{{ $venta->id }}"
                          class="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-900 overflow-hidden">

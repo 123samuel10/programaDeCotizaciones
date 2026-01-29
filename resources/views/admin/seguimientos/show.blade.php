@@ -318,48 +318,211 @@
                         </form>
                     </div>
 
-                    {{-- Contenedores --}}
-                    <div class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Contenedores</div>
-                                <div class="text-sm text-gray-500 dark:text-gray-400">
-                                    Registra BL, naviera y puertos.
-                                    <span class="text-xs" title="{{ $helpBL }}">(BL = documento de embarque)</span>
-                                </div>
+{{-- ==========================
+     CONTENEDORES (LISTA + MODAL EDITAR)
+     ========================== --}}
+<div class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
+    <div class="flex items-start justify-between gap-3">
+        <div>
+            <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Contenedores</div>
+            <div class="text-sm text-gray-500 dark:text-gray-400">
+                Registra y actualiza BL, naviera, puertos y estado.
+                <span class="text-xs" title="{{ $helpBL }}">(BL = documento de embarque)</span>
+            </div>
+        </div>
+    </div>
+
+    {{-- FORM AGREGAR CONTENEDOR --}}
+    <form method="POST"
+          action="{{ route('admin.seguimientos.contenedores.store', $seguimiento->id) }}"
+          class="mt-5 space-y-3">
+        @csrf
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Número contenedor</label>
+                <input name="numero_contenedor"
+                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                       placeholder="ABCD1234567">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpBL }}">BL</label>
+                <input name="bl"
+                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                       placeholder="Bill of Lading">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Naviera</label>
+                <input name="naviera"
+                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                       placeholder="COSCO / MAERSK">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Estado</label>
+                <select name="estado"
+                        class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    @foreach($estadosContenedor as $k => $label)
+                        <option value="{{ $k }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto salida</label>
+                <input name="puerto_salida"
+                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto llegada</label>
+                <input name="puerto_llegada"
+                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpETD }}">ETD</label>
+                <input type="date" name="etd"
+                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpETA }}">ETA</label>
+                <input type="date" name="eta"
+                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+            </div>
+        </div>
+
+        <button class="w-full px-5 py-2.5 rounded-xl bg-gray-900 text-white font-extrabold hover:bg-gray-800
+                       dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+            Agregar contenedor
+        </button>
+    </form>
+
+    {{-- LISTA CONTENEDORES --}}
+    @if($seguimiento->contenedores->isNotEmpty())
+        <div class="mt-6 space-y-4">
+            @foreach($seguimiento->contenedores as $c)
+                @php
+                    $modalId = 'modal-editar-contenedor-'.$c->id;
+                    $estadoCont = $estadosContenedor[$c->estado] ?? $c->estado ?? '—';
+                @endphp
+
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
+                    <div class="flex items-start justify-between gap-4">
+                        <div class="min-w-0">
+                            <div class="font-extrabold text-gray-900 dark:text-gray-100 truncate">
+                                {{ $c->numero_contenedor ?: 'Contenedor #'.$c->id }}
+                                @if($c->bl)
+                                    <span class="text-sm text-gray-500 dark:text-gray-400" title="{{ $helpBL }}">· BL: {{ $c->bl }}</span>
+                                @endif
+                            </div>
+
+                            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <span class="font-bold">Naviera:</span> {{ $c->naviera ?? '—' }}
+                                · <span class="font-bold">Estado:</span> {{ $estadoCont }}
+                            </div>
+
+                            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <span class="font-bold">Ruta:</span> {{ $c->puerto_salida ?? '—' }} → {{ $c->puerto_llegada ?? '—' }}
+                            </div>
+
+                            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                <span class="font-bold">ETD:</span> {{ $c->etd?->format('d/m/Y') ?? '—' }}
+                                · <span class="font-bold">ETA:</span> {{ $c->eta?->format('d/m/Y') ?? '—' }}
                             </div>
                         </div>
 
-                        <form method="POST" action="{{ route('admin.seguimientos.contenedores.store', $seguimiento->id) }}" class="mt-5 space-y-3">
+                        <div class="flex gap-2 shrink-0">
+                            {{-- BOTÓN EDITAR (ABRE MODAL) --}}
+                            <button type="button"
+                                    onclick="document.getElementById('{{ $modalId }}').classList.remove('hidden')"
+                                    class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
+                                Editar
+                            </button>
+
+                            {{-- ELIMINAR (FORM SEPARADO, SIN ANIDAR) --}}
+                            <form method="POST"
+                                  action="{{ route('admin.seguimientos.contenedores.destroy', [$seguimiento->id, $c->id]) }}"
+                                  onsubmit="return confirm('¿Eliminar este contenedor?')">
+                                @csrf
+                                @method('DELETE')
+                                <button class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ==========================
+                     MODAL EDITAR CONTENEDOR
+                     ========================== --}}
+                <div id="{{ $modalId }}" class="hidden fixed inset-0 z-50">
+                    {{-- Fondo --}}
+                    <div class="absolute inset-0 bg-black/50"
+                         onclick="document.getElementById('{{ $modalId }}').classList.add('hidden')"></div>
+
+                    {{-- Caja --}}
+                    <div class="relative mx-auto mt-24 w-[95%] max-w-3xl rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl">
+                        <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <div>
+                                <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Editar contenedor</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ $c->numero_contenedor ?: 'Contenedor #'.$c->id }}
+                                </div>
+                            </div>
+
+                            <button type="button"
+                                    onclick="document.getElementById('{{ $modalId }}').classList.add('hidden')"
+                                    class="px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 font-extrabold
+                                           dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100">
+                                Cerrar
+                            </button>
+                        </div>
+
+                        <form method="POST"
+                              action="{{ route('admin.seguimientos.contenedores.update', [$seguimiento->id, $c->id]) }}"
+                              class="p-5 space-y-4">
                             @csrf
+                            @method('PUT')
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Número contenedor</label>
-                                    <input name="numero_contenedor"
-                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                                           placeholder="ABCD1234567">
+                                    <input name="numero_contenedor" value="{{ old('numero_contenedor', $c->numero_contenedor) }}"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 </div>
+
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpBL }}">BL</label>
-                                    <input name="bl"
-                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                                           placeholder="Bill of Lading">
+                                    <input name="bl" value="{{ old('bl', $c->bl) }}"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Naviera</label>
-                                    <input name="naviera"
-                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-                                           placeholder="COSCO / MAERSK...">
+                                    <input name="naviera" value="{{ old('naviera', $c->naviera) }}"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 </div>
+
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Estado</label>
-                                    <select name="estado" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                    <select name="estado"
+                                            class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                         @foreach($estadosContenedor as $k => $label)
-                                            <option value="{{ $k }}">{{ $label }}</option>
+                                            <option value="{{ $k }}" {{ old('estado', $c->estado) === $k ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -368,69 +531,57 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto salida</label>
-                                    <input name="puerto_salida" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                    <input name="puerto_salida" value="{{ old('puerto_salida', $c->puerto_salida) }}"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 </div>
+
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto llegada</label>
-                                    <input name="puerto_llegada" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                    <input name="puerto_llegada" value="{{ old('puerto_llegada', $c->puerto_llegada) }}"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 </div>
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpETD }}">
-                                        Salida estimada (ETD)
-                                    </label>
-                                    <input type="date" name="etd" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpETD }}">ETD</label>
+                                    <input type="date" name="etd"
+                                           value="{{ old('etd', optional($c->etd)->format('Y-m-d')) }}"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpETA }}">
-                                        Llegada estimada (ETA)
-                                    </label>
-                                    <input type="date" name="eta" class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1" title="{{ $helpETA }}">ETA</label>
+                                    <input type="date" name="eta"
+                                           value="{{ old('eta', optional($c->eta)->format('Y-m-d')) }}"
+                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100">
                                 </div>
                             </div>
 
-                            <button class="w-full px-5 py-2.5 rounded-xl bg-gray-900 text-white font-extrabold hover:bg-gray-800
-                                           dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
-                                Agregar contenedor
-                            </button>
-                        </form>
+                            <div class="flex gap-2 pt-2">
+                                <button class="flex-1 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
+                                    Guardar cambios
+                                </button>
 
-                        @if($seguimiento->contenedores->isNotEmpty())
-                            <div class="mt-5 space-y-3">
-                                @foreach($seguimiento->contenedores as $c)
-                                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="min-w-0">
-                                                <div class="font-extrabold text-gray-900 dark:text-gray-100 truncate">
-                                                    {{ $c->numero_contenedor ?? 'Contenedor' }}
-                                                    @if($c->bl)
-                                                        <span class="text-sm text-gray-500 dark:text-gray-400" title="{{ $helpBL }}">· BL: {{ $c->bl }}</span>
-                                                    @endif
-                                                </div>
-                                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    {{ $c->naviera ?? '—' }} · {{ $c->puerto_salida ?? '—' }} → {{ $c->puerto_llegada ?? '—' }}
-                                                </div>
-                                                <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    Salida: {{ $c->etd?->format('d/m/Y') ?? '—' }} · Llegada: {{ $c->eta?->format('d/m/Y') ?? '—' }}
-                                                </div>
-                                            </div>
-
-                                            <form method="POST" action="{{ route('admin.seguimientos.contenedores.destroy', [$seguimiento->id, $c->id]) }}"
-                                                  onsubmit="return confirm('¿Eliminar este contenedor?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="px-3 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold">
-                                                    Eliminar
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                @endforeach
+                                <button type="button"
+                                        onclick="document.getElementById('{{ $modalId }}').classList.add('hidden')"
+                                        class="px-5 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 font-extrabold
+                                               dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-100">
+                                    Cancelar
+                                </button>
                             </div>
-                        @endif
+                        </form>
                     </div>
+                </div>
+            @endforeach
+        </div>
+    @else
+        <div class="mt-5 text-sm text-gray-600 dark:text-gray-300">
+            Aún no hay contenedores registrados.
+        </div>
+    @endif
+</div>
+
+
                 </div>
 
                 {{-- PANEL DERECHO --}}

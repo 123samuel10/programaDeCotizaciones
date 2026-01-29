@@ -50,8 +50,8 @@ class CotizacionController extends Controller
     $cotizaciones = Cotizacion::with(['usuario'])
         ->withCount('items')
         ->latest()
-        ->paginate(15)          // 👈 cantidad por página (15, 20, 25...)
-        ->withQueryString();    // 👈 conserva parámetros (ej: page)
+        ->paginate(15)          // cantidad por página (15, 20, 25...)
+        ->withQueryString();    // conserva parámetros (ej: page)
 
     return view('admin.cotizaciones.index', compact('cotizaciones'));
 }
@@ -329,7 +329,7 @@ public function enviarPorCorreo(Cotizacion $cotizacion)
     // Asegurar relación usuario
     $cotizacion->load('usuario');
 
-    // 🔐 Generar token si no existe
+    // Generar token si no existe
     if (empty($cotizacion->token)) {
         $cotizacion->token = Str::random(64); // coincide con tu migración token(64)
         $cotizacion->save();

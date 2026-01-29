@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
 Route::resourceParameters([
     'cotizaciones' => 'cotizacion',
     'productos' => 'producto',
-    'proveedores' => 'proveedor',  // ✅ FIX
+    'proveedores' => 'proveedor',
 ]);
 
 
@@ -124,6 +124,12 @@ Route::post('seguimientos/{seguimiento}/eventos', [SeguimientoController::class,
 Route::delete('seguimientos/{seguimiento}/eventos/{evento}', [SeguimientoController::class, 'eventoDestroy'])
     ->name('seguimientos.eventos.destroy');
 
+Route::put(
+    'seguimientos/{seguimiento}/contenedores/{contenedor}',
+    [SeguimientoController::class, 'contenedorUpdate']
+)->name('seguimientos.contenedores.update');
+
+
 });
 
 
@@ -174,12 +180,5 @@ Route::prefix('cotizacion')->name('public.cotizacion.')->group(function () {
     Route::get('{token}/pdf', [PublicCotizacionController::class, 'pdf'])
         ->name('pdf');
 });
-
-
-
-
-
-
-
 
 require __DIR__.'/auth.php';

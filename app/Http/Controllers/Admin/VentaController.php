@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class VentaController extends Controller
 {
-    // 🔒 Seguridad SIN middleware
+    // Seguridad SIN middleware
     private function validarAdmin()
     {
         $user = Auth::user();
@@ -88,7 +88,7 @@ class VentaController extends Controller
         return view('admin.ventas.show', compact('venta'));
     }
 
-    // ✅ Gestión manual (PRO: no deja “pagada” si hay comprobante sin aprobar)
+    //  Gestión manual (PRO: no deja “pagada” si hay comprobante sin aprobar)
     public function update(Request $request, Venta $venta)
     {
         $this->validarAdmin();
@@ -99,7 +99,7 @@ class VentaController extends Controller
             'notas_internas' => 'nullable|string|max:2000',
         ]);
 
-        // ✅ Regla PRO:
+        //  Regla PRO:
         // Si hay comprobante y NO está aceptado, NO permitir pagada manual.
         if (
             $request->estado_venta === 'pagada'
@@ -122,7 +122,7 @@ class VentaController extends Controller
             $data['pagada_en'] = null;
         }
 
-        // ✅ Si cancela y había comprobante pendiente, lo cerramos para que no quede “pendiente” eterno
+        // Si cancela y había comprobante pendiente, lo cerramos para que no quede “pendiente” eterno
         if (
             $request->estado_venta === 'cancelada'
             && !empty($venta->comprobante_path)
@@ -137,7 +137,7 @@ class VentaController extends Controller
         return back()->with('success', 'Venta actualizada correctamente.');
     }
 
-    // ✅ Aprobar / rechazar comprobante (1 endpoint PRO)
+    // Aprobar / rechazar comprobante (1 endpoint PRO)
     public function decisionPago(Request $request, Venta $venta)
     {
         $this->validarAdmin();
@@ -151,7 +151,7 @@ class VentaController extends Controller
             return back()->with('error', 'No hay comprobante para revisar.');
         }
 
-        // ✅ Solo decidir si está pendiente_revision
+        // Solo decidir si está pendiente_revision
         if (($venta->comprobante_estado ?? null) !== 'pendiente_revision') {
             return back()->with('error', 'Este comprobante ya fue revisado.');
         }

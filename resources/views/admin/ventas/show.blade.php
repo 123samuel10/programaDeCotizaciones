@@ -12,10 +12,6 @@
                 </p>
             </div>
 
-            {{-- <a href="{{ route('admin.ventas.index') }}"
-               class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600">
-                ← Volver
-            </a> --}}
 
             @php
     $seg = $venta->seguimiento;
