@@ -188,7 +188,7 @@
                             <div>
                                 <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Resumen</div>
                                 <div class="text-sm text-gray-500 dark:text-gray-400">
-                                    Datos clave del envío, fechas e incoterm.
+                                    Datos clave del envío, fechas y tracking.
                                 </div>
                             </div>
 
@@ -201,6 +201,7 @@
                         </div>
 
                         <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {{-- Proveedor --}}
                             <div class="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
                                 <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Proveedor</div>
                                 <div class="mt-1 font-extrabold text-gray-900 dark:text-gray-100">
@@ -211,6 +212,7 @@
                                 </div>
                             </div>
 
+                            {{-- Fechas --}}
                             <div class="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
                                 <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Fechas</div>
                                 <div class="mt-1 text-sm font-extrabold text-gray-900 dark:text-gray-100">
@@ -221,19 +223,23 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-                                <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Incoterm</div>
-                                <div class="mt-1 font-extrabold text-gray-900 dark:text-gray-100">
-                                    {{ $seguimiento->incoterm ?? '—' }}
-                                </div>
-
-                                @if($incotermMeta)
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        {{ $incotermMeta['label'] ?? '' }}
+                            {{-- ✅ Incoterm SOLO si es MARÍTIMO --}}
+                            @if(($seguimiento->tipo_envio ?? 'maritimo') === 'maritimo')
+                                <div class="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+                                    <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Incoterm</div>
+                                    <div class="mt-1 font-extrabold text-gray-900 dark:text-gray-100">
+                                        {{ $seguimiento->incoterm ?? '—' }}
                                     </div>
-                                @endif
-                            </div>
 
+                                    @if($incotermMeta)
+                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            {{ $incotermMeta['label'] ?? '' }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+
+                            {{-- Tipo envío --}}
                             <div class="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
                                 <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Tipo envío</div>
                                 <div class="mt-1 font-extrabold text-gray-900 dark:text-gray-100">
@@ -245,6 +251,43 @@
                             </div>
                         </div>
 
+                        {{-- ✅ Tracking AÉREO en resumen --}}
+                        @if(($seguimiento->tipo_envio ?? 'maritimo') === 'aereo')
+                            <div class="mt-5 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Tracking AÉREO</div>
+
+                                        <div class="mt-2 text-sm text-gray-800 dark:text-gray-200 space-y-1">
+                                            <div>
+                                                <span class="font-extrabold">AWB:</span>
+                                                <span class="font-semibold">{{ $seguimiento->awb ?? '—' }}</span>
+                                            </div>
+                                            <div>
+                                                <span class="font-extrabold">Aerolínea:</span>
+                                                <span class="font-semibold">{{ $seguimiento->aerolinea ?? '—' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-right">
+                                        @if(!empty($seguimiento->tracking_url))
+                                            <a href="{{ $seguimiento->tracking_url }}" target="_blank"
+                                               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
+                                                Ver tracking
+                                            </a>
+                                        @else
+                                            <div class="inline-flex px-3 py-1 rounded-full text-xs font-extrabold
+                                                        bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-200">
+                                                Sin URL
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Observaciones --}}
                         @if(!empty($seguimiento->observaciones))
                             <div class="mt-5 rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
                                 <div class="text-xs font-bold text-gray-500 dark:text-gray-400">Observaciones</div>
@@ -262,13 +305,20 @@
                             tipoEnvio: @js(old('tipo_envio', $seguimiento->tipo_envio ?? 'maritimo')),
                             incoterms: @js($incoterms),
                         }"
+                        x-effect="
+                            // ✅ Si cambia a AÉREO, ocultamos y limpiamos incoterm/detalles
+                            if (tipoEnvio === 'aereo') {
+                                incoterm = '';
+                                // Nota: el input hidden de incoterm_detalles lo mandamos vacío abajo
+                            }
+                        "
                         class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 p-6"
                     >
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Actualizar seguimiento</div>
                                 <div class="text-sm text-gray-500 dark:text-gray-400">
-                                    Cambia estado, fechas, incoterm y datos aéreos si aplica.
+                                    Cambia estado, fechas y datos del envío (incoterm solo marítimo / tracking solo aéreo).
                                 </div>
                             </div>
                             <span class="inline-flex px-3 py-1 rounded-full text-xs font-extrabold ring-1
@@ -324,27 +374,35 @@
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
-                                        Incoterm <span class="font-normal text-gray-500">(opcional)</span>
-                                    </label>
+                                {{-- ✅ Incoterm SOLO si es MARÍTIMO --}}
+                                <template x-if="tipoEnvio === 'maritimo'">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
+                                            Incoterm <span class="font-normal text-gray-500">(opcional)</span>
+                                        </label>
 
-                                    <select name="incoterm" x-model="incoterm"
-                                            class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        <option value="">— Seleccionar —</option>
-                                        @foreach($incoterms as $k => $meta)
-                                            <option value="{{ $k }}">{{ $k }} — {{ $meta['label'] ?? $k }}</option>
-                                        @endforeach
-                                    </select>
+                                        <select name="incoterm" x-model="incoterm"
+                                                class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            <option value="">— Seleccionar —</option>
+                                            @foreach($incoterms as $k => $meta)
+                                                <option value="{{ $k }}">{{ $k }} — {{ $meta['label'] ?? $k }}</option>
+                                            @endforeach
+                                        </select>
 
-                                    <template x-if="incoterm && incoterms[incoterm]">
-                                        <div class="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700
-                                                    dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                                            <div class="font-extrabold" x-text="incoterms[incoterm].label ?? incoterm"></div>
-                                            <div class="mt-1 leading-relaxed" x-text="incoterms[incoterm].desc ?? ''"></div>
-                                        </div>
-                                    </template>
-                                </div>
+                                        <template x-if="incoterm && incoterms[incoterm]">
+                                            <div class="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700
+                                                        dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                                                <div class="font-extrabold" x-text="incoterms[incoterm].label ?? incoterm"></div>
+                                                <div class="mt-1 leading-relaxed" x-text="incoterms[incoterm].desc ?? ''"></div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                {{-- ✅ Hidden para forzar que en AÉREO se envíe vacío --}}
+                                <template x-if="tipoEnvio === 'aereo'">
+                                    <input type="hidden" name="incoterm" value="">
+                                </template>
 
                                 <div>
                                     <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Estado</label>
@@ -374,119 +432,126 @@
                                 </div>
                             </div>
 
-                            {{-- Detalles incoterm --}}
-                            <div class="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div>
-                                        <div class="text-base font-extrabold text-gray-900 dark:text-gray-100">Detalles del Incoterm</div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">
-                                            Solo se muestra lo que aplica según el Incoterm seleccionado.
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <div x-show="!incoterm"
-                                         class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700
-                                                dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                                        Selecciona un Incoterm (FOB/CIF/EXW) para ver campos adicionales.
-                                    </div>
-
-                                    {{-- EXW --}}
-                                    <div x-cloak x-show="incoterm === 'EXW'" class="space-y-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
-                                                    Lugar de retiro <span class="text-red-500">*</span>
-                                                </label>
-                                                <input name="incoterm_detalles[lugar_retiro]"
-                                                       value="{{ old('incoterm_detalles.lugar_retiro', $incotermDetalles['lugar_retiro'] ?? '') }}"
-                                                       placeholder="Ej: Bodega Shenzhen / Dirección proveedor"
-                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                                    Obligatorio en EXW (dónde se recoge la carga).
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Contacto / referencia (opcional)</label>
-                                                <input name="incoterm_detalles[contacto_retiro]"
-                                                       value="{{ old('incoterm_detalles.contacto_retiro', $incotermDetalles['contacto_retiro'] ?? '') }}"
-                                                       placeholder="Ej: Sr. Li · +86…"
-                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                            {{-- ✅ Detalles incoterm SOLO si es MARÍTIMO --}}
+                            <template x-if="tipoEnvio === 'maritimo'">
+                                <div class="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div class="text-base font-extrabold text-gray-900 dark:text-gray-100">Detalles del Incoterm</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                Solo se muestra lo que aplica según el Incoterm seleccionado.
                                             </div>
                                         </div>
                                     </div>
 
-                                    {{-- FOB --}}
-                                    <div x-cloak x-show="incoterm === 'FOB'" class="space-y-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
-                                                    Puerto de carga <span class="text-red-500">*</span>
-                                                </label>
-                                                <input name="incoterm_detalles[puerto_carga]"
-                                                       value="{{ old('incoterm_detalles.puerto_carga', $incotermDetalles['puerto_carga'] ?? '') }}"
-                                                       placeholder="Ej: Puerto de Shanghái"
-                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                                    Obligatorio en FOB (dónde se embarca).
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Fecha listo en puerto (opcional)</label>
-                                                <input type="date" name="incoterm_detalles[fecha_listo_puerto]"
-                                                       value="{{ old('incoterm_detalles.fecha_listo_puerto', $incotermDetalles['fecha_listo_puerto'] ?? '') }}"
-                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- CIF --}}
-                                    <div x-cloak x-show="incoterm === 'CIF'" class="space-y-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
-                                                    Puerto de destino <span class="text-red-500">*</span>
-                                                </label>
-                                                <input name="incoterm_detalles[puerto_destino]"
-                                                       value="{{ old('incoterm_detalles.puerto_destino', $incotermDetalles['puerto_destino'] ?? '') }}"
-                                                       placeholder="Ej: Cartagena / Buenaventura"
-                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                                    Obligatorio en CIF (hasta dónde cubre el vendedor).
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Aseguradora (opcional)</label>
-                                                <input name="incoterm_detalles[aseguradora]"
-                                                       value="{{ old('incoterm_detalles.aseguradora', $incotermDetalles['aseguradora'] ?? '') }}"
-                                                       placeholder="Ej: Allianz / Mapfre"
-                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                            </div>
+                                    <div class="mt-4">
+                                        <div x-show="!incoterm"
+                                             class="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700
+                                                    dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                                            Selecciona un Incoterm (FOB/CIF/EXW) para ver campos adicionales.
                                         </div>
 
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Valor seguro (opcional)</label>
-                                                <input type="number" step="0.01" min="0" name="incoterm_detalles[valor_seguro]"
-                                                       value="{{ old('incoterm_detalles.valor_seguro', $incotermDetalles['valor_seguro'] ?? '') }}"
-                                                       placeholder="Ej: 120.00"
-                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                            </div>
-
-                                            <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700
-                                                        dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                                                <div class="font-extrabold">Tip CIF</div>
-                                                <div class="mt-1">
-                                                    CIF incluye costo + flete + seguro hasta puerto destino.
-                                                    Aduana y entrega final normalmente quedan del lado del comprador.
+                                        {{-- EXW --}}
+                                        <div x-cloak x-show="incoterm === 'EXW'" class="space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
+                                                        Lugar de retiro <span class="text-red-500">*</span>
+                                                    </label>
+                                                    <input name="incoterm_detalles[lugar_retiro]"
+                                                           value="{{ old('incoterm_detalles.lugar_retiro', $incotermDetalles['lugar_retiro'] ?? '') }}"
+                                                           placeholder="Ej: Bodega Shenzhen / Dirección proveedor"
+                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                                                        Obligatorio en EXW (dónde se recoge la carga).
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Contacto / referencia (opcional)</label>
+                                                    <input name="incoterm_detalles[contacto_retiro]"
+                                                           value="{{ old('incoterm_detalles.contacto_retiro', $incotermDetalles['contacto_retiro'] ?? '') }}"
+                                                           placeholder="Ej: Sr. Li · +86…"
+                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
+                                        {{-- FOB --}}
+                                        <div x-cloak x-show="incoterm === 'FOB'" class="space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
+                                                        Puerto de carga <span class="text-red-500">*</span>
+                                                    </label>
+                                                    <input name="incoterm_detalles[puerto_carga]"
+                                                           value="{{ old('incoterm_detalles.puerto_carga', $incotermDetalles['puerto_carga'] ?? '') }}"
+                                                           placeholder="Ej: Puerto de Shanghái"
+                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                                                        Obligatorio en FOB (dónde se embarca).
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Fecha listo en puerto (opcional)</label>
+                                                    <input type="date" name="incoterm_detalles[fecha_listo_puerto]"
+                                                           value="{{ old('incoterm_detalles.fecha_listo_puerto', $incotermDetalles['fecha_listo_puerto'] ?? '') }}"
+                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- CIF --}}
+                                        <div x-cloak x-show="incoterm === 'CIF'" class="space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
+                                                        Puerto de destino <span class="text-red-500">*</span>
+                                                    </label>
+                                                    <input name="incoterm_detalles[puerto_destino]"
+                                                           value="{{ old('incoterm_detalles.puerto_destino', $incotermDetalles['puerto_destino'] ?? '') }}"
+                                                           placeholder="Ej: Cartagena / Buenaventura"
+                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                                                        Obligatorio en CIF (hasta dónde cubre el vendedor).
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Aseguradora (opcional)</label>
+                                                    <input name="incoterm_detalles[aseguradora]"
+                                                           value="{{ old('incoterm_detalles.aseguradora', $incotermDetalles['aseguradora'] ?? '') }}"
+                                                           placeholder="Ej: Allianz / Mapfre"
+                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Valor seguro (opcional)</label>
+                                                    <input type="number" step="0.01" min="0" name="incoterm_detalles[valor_seguro]"
+                                                           value="{{ old('incoterm_detalles.valor_seguro', $incotermDetalles['valor_seguro'] ?? '') }}"
+                                                           placeholder="Ej: 120.00"
+                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                                </div>
+
+                                                <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 text-xs text-gray-700
+                                                            dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                                                    <div class="font-extrabold">Tip CIF</div>
+                                                    <div class="mt-1">
+                                                        CIF incluye costo + flete + seguro hasta puerto destino.
+                                                        Aduana y entrega final normalmente quedan del lado del comprador.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
                                 </div>
-                            </div>
+                            </template>
+
+                            {{-- ✅ Hidden para limpiar incoterm_detalles si es AÉREO --}}
+                            <template x-if="tipoEnvio === 'aereo'">
+                                <input type="hidden" name="incoterm_detalles" value="">
+                            </template>
 
                             {{-- AÉREO --}}
                             <div x-cloak x-show="tipoEnvio === 'aereo'" class="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
@@ -566,221 +631,143 @@
                 <div class="lg:col-span-5 space-y-6">
 
                     {{-- Contenedores (solo maritimo) --}}
-                    <div class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-                        <div class="p-6 border-b border-gray-100 dark:border-gray-700">
-                            <div class="flex items-start justify-between gap-3">
-                                <div>
-                                    <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Contenedores</div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400">
-                                        Solo aplica para envío marítimo.
-                                    </div>
-                                </div>
-                                <span class="inline-flex px-3 py-1 rounded-full text-xs font-extrabold ring-1
-                                             {{ $tipoEnvio === 'maritimo' ? 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20' : 'bg-gray-100 text-gray-700 ring-gray-200 dark:bg-gray-900/40 dark:text-gray-200 dark:ring-gray-700' }}">
-                                    {{ $tipoEnvio === 'maritimo' ? 'HABILITADO' : 'NO APLICA' }}
-                                </span>
-                            </div>
-                        </div>
+      {{-- Contenedores (marítimo + permitido por Incoterm) --}}
+<div class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
+    <div class="p-6 border-b border-gray-100 dark:border-gray-700">
+        <div class="flex items-start justify-between gap-3">
+            <div>
+                <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Contenedores</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    Aplica solo si el envío es marítimo y el Incoterm lo permite.
+                </div>
+            </div>
 
-                        @if($tipoEnvio !== 'maritimo')
-                            <div class="p-6">
-                                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                                    Este seguimiento es <b>AÉREO</b>. No se usan contenedores.
-                                </div>
-                            </div>
-                        @else
-                            <div class="p-6 space-y-5">
+            @php
+                $badge = 'bg-gray-100 text-gray-700 ring-gray-200 dark:bg-gray-900/40 dark:text-gray-200 dark:ring-gray-700';
+                $badgeText = 'NO APLICA';
 
-                                {{-- Crear contenedor --}}
-                                <form method="POST" action="{{ route('admin.seguimientos.contenedores.store', $seguimiento->id) }}" class="space-y-4">
-                                    {{-- Ruta sugerida:
-                                         Route::post('/admin/seguimientos/{seguimiento}/contenedores', [SeguimientoController::class,'contenedorStore'])->name('admin.seguimientos.contenedores.store');
-                                     --}}
-                                    @csrf
+                if ($tipoEnvio === 'maritimo' && $permiteContenedores) {
+                    $badge = 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20';
+                    $badgeText = 'HABILITADO';
+                } elseif ($tipoEnvio === 'maritimo' && !$permiteContenedores) {
+                    $badge = 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20';
+                    $badgeText = 'RESTRINGIDO';
+                }
+            @endphp
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Número contenedor</label>
-                                            <input name="numero_contenedor" value="{{ old('numero_contenedor') }}" placeholder="Ej: MSKU1234567"
-                                                   class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">BL</label>
-                                            <input name="bl" value="{{ old('bl') }}" placeholder="Ej: BL-001234"
-                                                   class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Naviera</label>
-                                            <input name="naviera" value="{{ old('naviera') }}" placeholder="Ej: MSC / Maersk"
-                                                   class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Estado</label>
-                                            <select name="estado"
-                                                    class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                @foreach($estadosContenedor as $k => $label)
-                                                    <option value="{{ $k }}" {{ old('estado','reservado') === $k ? 'selected' : '' }}>{{ $label }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto salida</label>
-                                            <input name="puerto_salida" value="{{ old('puerto_salida') }}" placeholder="Ej: Shanghái"
-                                                   class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto llegada</label>
-                                            <input name="puerto_llegada" value="{{ old('puerto_llegada') }}" placeholder="Ej: Cartagena"
-                                                   class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        </div>
+            <span class="inline-flex px-3 py-1 rounded-full text-xs font-extrabold ring-1 {{ $badge }}">
+                {{ $badgeText }}
+            </span>
+        </div>
+    </div>
 
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">ETD</label>
-                                            <input type="date" name="etd" value="{{ old('etd') }}"
-                                                   class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">ETA</label>
-                                            <input type="date" name="eta" value="{{ old('eta') }}"
-                                                   class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                        </div>
-                                    </div>
+    {{-- CASO 1: AÉREO --}}
+    @if($tipoEnvio !== 'maritimo')
+        <div class="p-6">
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                Este seguimiento es <b>AÉREO</b>. No se usan contenedores.
+            </div>
+        </div>
 
-                                    <button class="w-full px-4 py-2 rounded-xl bg-gray-900 text-white font-extrabold hover:bg-gray-800
-                                                   dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
-                                        + Agregar contenedor
-                                    </button>
-                                </form>
+    {{-- CASO 2: MARÍTIMO PERO INCOTERM NO PERMITE --}}
+    @elseif(!$permiteContenedores)
+        <div class="p-6">
+            <div class="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900 dark:border-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-100">
+                <div class="font-extrabold">Contenedores deshabilitados para este Incoterm</div>
+                <div class="mt-1">
+                    Incoterm actual: <b>{{ $seguimiento->incoterm ?? '—' }}</b>.
+                    Ajusta el Incoterm en “Actualizar seguimiento” si necesitas gestionar contenedores.
+                </div>
+            </div>
+        </div>
 
-                                {{-- Lista contenedores --}}
-                                <div class="pt-2">
-                                    <div class="text-sm font-extrabold text-gray-900 dark:text-gray-100 mb-3">
-                                        Registrados ({{ $contenedores->count() }})
-                                    </div>
+    {{-- CASO 3: MARÍTIMO Y PERMITIDO --}}
+    @else
+        <div class="p-6 space-y-5">
 
-                                    @if($contenedores->isEmpty())
-                                        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                                            Aún no hay contenedores asociados.
-                                        </div>
-                                    @else
-                                        <div class="space-y-3">
-                                            @foreach($contenedores as $c)
-                                                <div x-data="{ open:false }" class="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-                                                    <div class="flex items-start justify-between gap-3">
-                                                        <div>
-                                                            <div class="font-extrabold text-gray-900 dark:text-gray-100">
-                                                                {{ $c->numero_contenedor ?? ('Contenedor #'.$c->id) }}
-                                                            </div>
-                                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                                BL: {{ $c->bl ?? '—' }} · Naviera: {{ $c->naviera ?? '—' }}
-                                                            </div>
-                                                        </div>
+            {{-- Crear contenedor --}}
+            <form method="POST" action="{{ route('admin.seguimientos.contenedores.store', $seguimiento->id) }}" class="space-y-4">
+                @csrf
 
-                                                        <div class="text-right">
-                                                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-extrabold ring-1
-                                                                bg-gray-100 text-gray-900 dark:bg-gray-900/40 dark:text-gray-100">
-                                                                {{ $estadosContenedor[$c->estado] ?? $c->estado }}
-                                                            </span>
-
-                                                            <button type="button" @click="open = !open"
-                                                                    class="mt-2 text-xs font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300">
-                                                                @{{ open ? 'Ocultar' : 'Editar' }}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-300">
-                                                        <div>ETD: <b class="text-gray-900 dark:text-gray-100">{{ $c->etd?->format('d/m/Y') ?? '—' }}</b></div>
-                                                        <div>ETA: <b class="text-gray-900 dark:text-gray-100">{{ $c->eta?->format('d/m/Y') ?? '—' }}</b></div>
-                                                        <div class="col-span-2">
-                                                            Ruta: <b class="text-gray-900 dark:text-gray-100">{{ $c->puerto_salida ?? '—' }}</b> → <b class="text-gray-900 dark:text-gray-100">{{ $c->puerto_llegada ?? '—' }}</b>
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Form editar --}}
-                                                    <div x-cloak x-show="open" class="mt-4">
-                                                        <form method="POST" action="{{ route('admin.seguimientos.contenedores.update', [$seguimiento->id, $c->id]) }}"
-                                                              class="space-y-3">
-                                                            {{-- Ruta sugerida:
-                                                                 Route::put('/admin/seguimientos/{seguimiento}/contenedores/{contenedor}', [SeguimientoController::class,'contenedorUpdate'])->name('admin.seguimientos.contenedores.update');
-                                                             --}}
-                                                            @csrf
-                                                            @method('PUT')
-
-                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Número</label>
-                                                                    <input name="numero_contenedor" value="{{ old('numero_contenedor', $c->numero_contenedor) }}"
-                                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                </div>
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">BL</label>
-                                                                    <input name="bl" value="{{ old('bl', $c->bl) }}"
-                                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                </div>
-
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Naviera</label>
-                                                                    <input name="naviera" value="{{ old('naviera', $c->naviera) }}"
-                                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                </div>
-
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Estado</label>
-                                                                    <select name="estado"
-                                                                            class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                        @foreach($estadosContenedor as $k => $label)
-                                                                            <option value="{{ $k }}" {{ old('estado', $c->estado) === $k ? 'selected' : '' }}>{{ $label }}</option>
-                                                                        @endforeach
-                                                                    </select>
-                                                                </div>
-
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto salida</label>
-                                                                    <input name="puerto_salida" value="{{ old('puerto_salida', $c->puerto_salida) }}"
-                                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                </div>
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto llegada</label>
-                                                                    <input name="puerto_llegada" value="{{ old('puerto_llegada', $c->puerto_llegada) }}"
-                                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                </div>
-
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">ETD</label>
-                                                                    <input type="date" name="etd" value="{{ old('etd', optional($c->etd)->format('Y-m-d')) }}"
-                                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                </div>
-                                                                <div>
-                                                                    <label class="block text-[11px] font-bold text-gray-600 dark:text-gray-300 mb-1">ETA</label>
-                                                                    <input type="date" name="eta" value="{{ old('eta', optional($c->eta)->format('Y-m-d')) }}"
-                                                                           class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                                                </div>
-                                                            </div>
-
-                                                            <div class="flex gap-2">
-                                                                <button class="flex-1 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
-                                                                    Guardar
-                                                                </button>
-
-                                                                <button type="button"
-                                                                        @click="$dispatch('open-delete-contenedor', { id: '{{ $c->id }}' })"
-                                                                        class="px-4 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-extrabold
-                                                                               dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-200">
-                                                                    Eliminar
-                                                                </button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-
-                            </div>
-                        @endif
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Número contenedor</label>
+                        <input name="numero_contenedor" value="{{ old('numero_contenedor') }}" placeholder="Ej: MSKU1234567"
+                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">BL</label>
+                        <input name="bl" value="{{ old('bl') }}" placeholder="Ej: BL-001234"
+                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Naviera</label>
+                        <input name="naviera" value="{{ old('naviera') }}" placeholder="Ej: MSC / Maersk"
+                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Estado</label>
+                        <select name="estado"
+                                class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                            @foreach($estadosContenedor as $k => $label)
+                                <option value="{{ $k }}" {{ old('estado','reservado') === $k ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto salida</label>
+                        <input name="puerto_salida" value="{{ old('puerto_salida') }}" placeholder="Ej: Shanghái"
+                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto llegada</label>
+                        <input name="puerto_llegada" value="{{ old('puerto_llegada') }}" placeholder="Ej: Cartagena"
+                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">ETD</label>
+                        <input type="date" name="etd" value="{{ old('etd') }}"
+                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">ETA</label>
+                        <input type="date" name="eta" value="{{ old('eta') }}"
+                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                    </div>
+                </div>
+
+                <button class="w-full px-4 py-2 rounded-xl bg-gray-900 text-white font-extrabold hover:bg-gray-800
+                               dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
+                    + Agregar contenedor
+                </button>
+            </form>
+
+            {{-- Lista contenedores --}}
+            <div class="pt-2">
+                <div class="text-sm font-extrabold text-gray-900 dark:text-gray-100 mb-3">
+                    Registrados ({{ $contenedores->count() }})
+                </div>
+
+                @if($contenedores->isEmpty())
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
+                        Aún no hay contenedores asociados.
+                    </div>
+                @else
+                    {{-- ✅ AQUÍ VA TU LISTA ACTUAL (NO LA CAMBIES) --}}
+                    <div class="space-y-3">
+                        @foreach($contenedores as $c)
+                            {{-- pega aquí exactamente tu bloque actual de cada contenedor --}}
+                            {{-- (desde <div x-data="{ open:false }" ...> hasta el cierre) --}}
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+        </div>
+    @endif
+</div>
+
 
                     {{-- Eventos / Bitácora --}}
                     <div class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">

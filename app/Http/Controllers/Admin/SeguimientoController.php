@@ -25,23 +25,27 @@ class SeguimientoController extends Controller
     }
 
     // ✅ Catálogo Incoterms (pro + explicación)
-    private function incoterms(): array
-    {
-        return [
-            'EXW' => [
-                'label' => 'Ex Works (En fábrica)',
-                'desc'  => 'El vendedor entrega en su bodega/fábrica. El comprador asume transporte, exportación, flete, seguro e importación.',
-            ],
-            'FOB' => [
-                'label' => 'Free On Board (A bordo)',
-                'desc'  => 'El vendedor entrega la carga en el puerto de salida (a bordo). Desde ahí, el riesgo/costo principal es del comprador.',
-            ],
-            'CIF' => [
-                'label' => 'Cost, Insurance & Freight',
-                'desc'  => 'El vendedor paga costo + flete + seguro hasta puerto destino. Aduana e inland suelen ser del comprador.',
-            ],
-        ];
-    }
+private function incoterms(): array
+{
+    return [
+        'EXW' => [
+            'label' => 'Ex Works (En fábrica)',
+            'desc'  => 'El vendedor entrega en su bodega/fábrica. El comprador asume transporte, exportación, flete, seguro e importación.',
+            'permite_contenedores' => false,
+        ],
+        'FOB' => [
+            'label' => 'Free On Board (A bordo)',
+            'desc'  => 'El vendedor entrega la carga en el puerto de salida (a bordo). Desde ahí, el riesgo/costo principal es del comprador.',
+            'permite_contenedores' => true, // ✅ SÍ permite
+        ],
+        'CIF' => [
+            'label' => 'Cost, Insurance & Freight',
+            'desc'  => 'El vendedor paga costo + flete + seguro hasta puerto destino. Aduana e inland suelen ser del comprador.',
+            'permite_contenedores' => true, // ✅ SÍ permite
+        ],
+    ];
+}
+
 
     public function index(Request $request)
     {
@@ -182,26 +186,30 @@ class SeguimientoController extends Controller
             ->with('success', 'Seguimiento creado correctamente.');
     }
 
-    public function show(Seguimiento $seguimiento)
-    {
-        $this->validarAdmin();
+  public function show(Seguimiento $seguimiento)
+{
+    $this->validarAdmin();
 
-        $seguimiento->load([
-            'venta.usuario',
-            'proveedor',
-            'contenedores',
-            'eventos.creador',
-        ]);
+    $seguimiento->load([
+        'venta.usuario',
+        'proveedor',
+        'contenedores',
+        'eventos.creador',
+    ]);
 
-        $proveedores = Proveedor::orderBy('nombre')->get();
-        $estados = $this->estados();
-        $estadosContenedor = $this->estadosContenedor();
-        $incoterms = $this->incoterms();
+    $proveedores = Proveedor::orderBy('nombre')->get();
+    $estados = $this->estados();
+    $estadosContenedor = $this->estadosContenedor();
+    $incoterms = $this->incoterms();
 
-        return view('admin.seguimientos.show', compact(
-            'seguimiento','proveedores','estados','estadosContenedor','incoterms'
-        ));
-    }
+    // ✅ ESTA LÍNEA FALTA
+    $permiteContenedores = $this->permiteContenedoresPara($seguimiento);
+
+    return view('admin.seguimientos.show', compact(
+        'seguimiento','proveedores','estados','estadosContenedor','incoterms','permiteContenedores'
+    ));
+}
+
 
     public function update(Request $request, Seguimiento $seguimiento)
     {
@@ -281,7 +289,10 @@ class SeguimientoController extends Controller
         if (($seguimiento->tipo_envio ?? null) !== 'maritimo') {
             return back()->with('error', 'Este seguimiento es AÉREO. No aplica contenedores.');
         }
-
+if (!$this->permiteContenedoresPara($seguimiento)) {
+        $inc = $seguimiento->incoterm ?? '—';
+        return back()->with('error', "Para Incoterm {$inc} no aplica gestión de contenedores en este sistema.");
+    }
         $data = $request->validate([
             'numero_contenedor' => 'nullable|string|max:50',
             'bl' => 'nullable|string|max:80',
@@ -317,6 +328,10 @@ class SeguimientoController extends Controller
         if (($seguimiento->tipo_envio ?? null) !== 'maritimo') {
             return back()->with('error', 'Este seguimiento es AÉREO. No aplica contenedores.');
         }
+          if (!$this->permiteContenedoresPara($seguimiento)) {
+        $inc = $seguimiento->incoterm ?? '—';
+        return back()->with('error', "Para Incoterm {$inc} no aplica gestión de contenedores en este sistema.");
+    }
 
         $data = $request->validate([
             'numero_contenedor' => 'nullable|string|max:50',
@@ -348,15 +363,24 @@ class SeguimientoController extends Controller
         return back()->with('success', 'Contenedor actualizado.');
     }
 
-    public function contenedorDestroy(Seguimiento $seguimiento, Contenedor $contenedor)
-    {
-        $this->validarAdmin();
-        if ($contenedor->seguimiento_id !== $seguimiento->id) abort(403);
+  public function contenedorDestroy(Seguimiento $seguimiento, Contenedor $contenedor)
+{
+    $this->validarAdmin();
+    if ($contenedor->seguimiento_id !== $seguimiento->id) abort(403);
 
-        $contenedor->delete();
-
-        return back()->with('success', 'Contenedor eliminado.');
+    if (($seguimiento->tipo_envio ?? null) !== 'maritimo') {
+        return back()->with('error', 'Este seguimiento es AÉREO. No aplica contenedores.');
     }
+
+    if (!$this->permiteContenedoresPara($seguimiento)) {
+        $inc = $seguimiento->incoterm ?? '—';
+        return back()->with('error', "Para Incoterm {$inc} no aplica gestión de contenedores en este sistema.");
+    }
+
+    $contenedor->delete();
+    return back()->with('success', 'Contenedor eliminado.');
+}
+
 
     // -------- EVENTOS --------
     public function eventoStore(Request $request, Seguimiento $seguimiento)
@@ -433,4 +457,27 @@ class SeguimientoController extends Controller
             'entregado' => 'Entregado',
         ];
     }
+
+//     private function permiteContenedoresPara(Seguimiento $seguimiento): bool
+// {
+//     if (($seguimiento->tipo_envio ?? null) !== 'maritimo') return false;
+
+//     $incoterm = $seguimiento->incoterm ?? null;
+//     if (!$incoterm) return false; // si no hay incoterm, por seguridad no mostramos
+
+//     $incoterms = $this->incoterms();
+//     return (bool) ($incoterms[$incoterm]['permite_contenedores'] ?? false);
+// }
+private function permiteContenedoresPara(Seguimiento $seguimiento): bool
+{
+    if (($seguimiento->tipo_envio ?? null) !== 'maritimo') return false;
+
+    $incoterm = strtoupper(trim((string)($seguimiento->incoterm ?? '')));
+    if ($incoterm === '') return false;
+
+    $incoterms = $this->incoterms();
+    return (bool) ($incoterms[$incoterm]['permite_contenedores'] ?? false);
+}
+
+
 }

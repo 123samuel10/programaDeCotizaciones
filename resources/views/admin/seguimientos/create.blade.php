@@ -45,6 +45,12 @@
                     tipoEnvio: @js($tipoEnvioOld),
                     incoterms: @js($incoterms),
                 }"
+                x-init="
+                    // ✅ Si cambia a AÉREO, limpiamos incoterm (para que no quede 'pegado')
+                    $watch('tipoEnvio', (v) => {
+                        if (v === 'aereo') incoterm = '';
+                    })
+                "
                 class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 p-6"
             >
                 <form method="POST" action="{{ route('admin.ventas.seguimiento.store', $venta->id) }}" class="space-y-6">
@@ -97,7 +103,8 @@
                             </div>
                         </div>
 
-                        <div>
+                        {{-- ✅ INCOTERM (solo si es MARÍTIMO) --}}
+                        <div x-cloak x-show="tipoEnvio === 'maritimo'">
                             <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
                                 Incoterm <span class="font-normal text-gray-500">(opcional)</span>
                             </label>
@@ -147,10 +154,8 @@
                         </div>
                     </div>
 
-                    {{-- ==========================
-                         DETALLES INCOTERM (DINÁMICO)
-                         ========================== --}}
-                    <div class="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
+                    {{-- ✅ DETALLES INCOTERM (solo si es MARÍTIMO) --}}
+                    <div x-cloak x-show="tipoEnvio === 'maritimo'" class="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Detalles del Incoterm</div>
