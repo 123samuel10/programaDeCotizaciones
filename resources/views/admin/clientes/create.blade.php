@@ -1,3 +1,4 @@
+{{-- resources/views/admin/clientes/create.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
@@ -81,6 +82,80 @@
                             @error('email') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                         </div>
 
+                        {{-- DATOS PARA COTIZACIÓN --}}
+                        <div class="rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                            <div class="p-4 bg-gray-50 dark:bg-gray-900/40 flex items-start justify-between gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                        Datos para cotización <span class="text-xs text-gray-400">(opcional)</span>
+                                    </label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        País, ciudad, dirección, teléfono y NIT ayudan a que la cotización se vea profesional.
+                                    </p>
+                                </div>
+                                <span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700
+                                             dark:bg-blue-900/30 dark:text-blue-200 border border-blue-100 dark:border-blue-900">
+                                    Pro
+                                </span>
+                            </div>
+
+                            <div class="p-4 space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">País</label>
+                                        <select name="pais"
+                                                class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            <option value="">Selecciona un país</option>
+                                            @php $pais = old('pais'); @endphp
+                                            <option value="Colombia" {{ $pais==='Colombia' ? 'selected' : '' }}>Colombia</option>
+                                            <option value="México" {{ $pais==='México' ? 'selected' : '' }}>México</option>
+                                            <option value="Perú" {{ $pais==='Perú' ? 'selected' : '' }}>Perú</option>
+                                            <option value="Ecuador" {{ $pais==='Ecuador' ? 'selected' : '' }}>Ecuador</option>
+                                            <option value="Chile" {{ $pais==='Chile' ? 'selected' : '' }}>Chile</option>
+                                            <option value="Argentina" {{ $pais==='Argentina' ? 'selected' : '' }}>Argentina</option>
+                                            <option value="Estados Unidos" {{ $pais==='Estados Unidos' ? 'selected' : '' }}>Estados Unidos</option>
+                                            <option value="España" {{ $pais==='España' ? 'selected' : '' }}>España</option>
+                                        </select>
+                                        @error('pais') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Ciudad</label>
+                                        <input name="ciudad" value="{{ old('ciudad') }}"
+                                               placeholder="Ej: Bogotá"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('ciudad') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Dirección</label>
+                                    <input name="direccion" value="{{ old('direccion') }}"
+                                           placeholder="Ej: Cra 12 # 45-67"
+                                           class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                    @error('direccion') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Teléfono</label>
+                                        <input name="telefono" value="{{ old('telefono') }}"
+                                               placeholder="Ej: +57 300 000 0000"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('telefono') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">NIT</label>
+                                        <input name="nit" value="{{ old('nit') }}"
+                                               placeholder="Ej: 900123456-7"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('nit') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Password --}}
                         <div class="rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                             <div class="p-4 bg-gray-50 dark:bg-gray-900/40 flex items-start justify-between gap-4">
@@ -136,7 +211,7 @@
                     <div class="mt-6 p-4 rounded-2xl bg-blue-50 text-blue-800 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900">
                         <div class="font-semibold mb-1">Tip</div>
                         <p class="text-sm">
-                            Si el cliente es una empresa, llena el campo <b>Empresa</b> para cotizaciones más claras.
+                            Si el cliente es una empresa, llena <b>Empresa</b> y <b>NIT</b> para cotizaciones más claras.
                         </p>
                     </div>
                 </div>

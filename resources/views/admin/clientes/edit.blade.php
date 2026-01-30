@@ -1,4 +1,4 @@
-
+{{-- resources/views/admin/clientes/edit.blade.php --}}
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between gap-4">
@@ -101,6 +101,68 @@
                             @error('email') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                         </div>
 
+                        {{-- Datos para cotización --}}
+                        <div class="rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                            <div class="p-4 bg-gray-50 dark:bg-gray-900/40 flex items-start justify-between gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-200">
+                                        Datos para cotización (opcional)
+                                    </label>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        País, ciudad, dirección, teléfono y NIT para cotizaciones más limpias.
+                                    </p>
+                                </div>
+
+                                <span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 border border-blue-100 dark:border-blue-900">
+                                    Pro
+                                </span>
+                            </div>
+
+                            <div class="p-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">País</label>
+                                        <input name="pais" value="{{ old('pais', $cliente->pais) }}"
+                                               placeholder="Ej: Colombia"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('pais') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Ciudad</label>
+                                        <input name="ciudad" value="{{ old('ciudad', $cliente->ciudad) }}"
+                                               placeholder="Ej: Bogotá"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('ciudad') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Dirección</label>
+                                        <input name="direccion" value="{{ old('direccion', $cliente->direccion) }}"
+                                               placeholder="Ej: Cra 12 # 45-67"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('direccion') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">Teléfono</label>
+                                        <input name="telefono" value="{{ old('telefono', $cliente->telefono) }}"
+                                               placeholder="Ej: +57 300 000 0000"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('telefono') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm mb-1 text-gray-600 dark:text-gray-300">NIT</label>
+                                        <input name="nit" value="{{ old('nit', $cliente->nit) }}"
+                                               placeholder="Ej: 900123456-7"
+                                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                        @error('nit') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         {{-- Password con toggle --}}
                         <div class="rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                             <div class="p-4 bg-gray-50 dark:bg-gray-900/40 flex items-start justify-between gap-4">
@@ -141,60 +203,85 @@
                     </form>
                 </div>
 
-                {{-- SIDEBAR: INFO / AYUDA --}}
-              {{-- SIDEBAR: INFO / AYUDA --}}
-<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 shadow-sm h-fit">
-    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-        Resumen
-    </h3>
+                {{-- SIDEBAR: RESUMEN --}}
+                <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border dark:border-gray-700 shadow-sm h-fit">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        Resumen
+                    </h3>
 
-    <div class="mt-4 space-y-3 text-sm">
+                    <div class="mt-4 space-y-3 text-sm">
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">Nombre</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                                {{ $cliente->name }}
+                            </span>
+                        </div>
 
-        {{-- Nombre --}}
-        <div class="grid grid-cols-12 gap-3 items-start">
-            <span class="col-span-4 text-gray-500 dark:text-gray-400">Nombre</span>
-            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
-                {{ $cliente->name }}
-            </span>
-        </div>
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">Empresa</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                                {{ $cliente->empresa ?? '—' }}
+                            </span>
+                        </div>
 
-        {{-- Empresa --}}
-        <div class="grid grid-cols-12 gap-3 items-start">
-            <span class="col-span-4 text-gray-500 dark:text-gray-400">Empresa</span>
-            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
-                {{ $cliente->empresa ?? '—' }}
-            </span>
-        </div>
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">Email</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-all">
+                                {{ $cliente->email }}
+                            </span>
+                        </div>
 
-        {{-- Email  --}}
-        <div class="grid grid-cols-12 gap-3 items-start">
-            <span class="col-span-4 text-gray-500 dark:text-gray-400">Email</span>
+                        {{-- NUEVOS CAMPOS --}}
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">País</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                                {{ $cliente->pais ?? '—' }}
+                            </span>
+                        </div>
 
-            {{-- Opción A: NO se sale y parte el texto (recomendado) --}}
-            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-all">
-                {{ $cliente->email }}
-            </span>
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">Ciudad</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                                {{ $cliente->ciudad ?? '—' }}
+                            </span>
+                        </div>
 
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">Dirección</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                                {{ $cliente->direccion ?? '—' }}
+                            </span>
+                        </div>
 
-        </div>
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">Teléfono</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                                {{ $cliente->telefono ?? '—' }}
+                            </span>
+                        </div>
 
-        {{-- Creado --}}
-        <div class="grid grid-cols-12 gap-3 items-start">
-            <span class="col-span-4 text-gray-500 dark:text-gray-400">Creado</span>
-            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right">
-                {{ optional($cliente->created_at)->format('Y-m-d') ?? '—' }}
-            </span>
-        </div>
-    </div>
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">NIT</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right break-words">
+                                {{ $cliente->nit ?? '—' }}
+                            </span>
+                        </div>
 
-    <div class="mt-6 p-4 rounded-2xl bg-blue-50 text-blue-800 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900">
-        <div class="font-semibold mb-1">Tip</div>
-        <p class="text-sm">
-            Para cotizaciones es mejor tener <b>Empresa</b> llena si el cliente es corporativo.
-        </p>
-    </div>
-</div>
+                        <div class="grid grid-cols-12 gap-3 items-start">
+                            <span class="col-span-4 text-gray-500 dark:text-gray-400">Creado</span>
+                            <span class="col-span-8 font-semibold text-gray-900 dark:text-gray-100 text-right">
+                                {{ optional($cliente->created_at)->format('Y-m-d') ?? '—' }}
+                            </span>
+                        </div>
+                    </div>
 
+                    <div class="mt-6 p-4 rounded-2xl bg-blue-50 text-blue-800 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900">
+                        <div class="font-semibold mb-1">Tip</div>
+                        <p class="text-sm">
+                            Si el cliente es empresa, llena <b>Empresa</b> y <b>NIT</b> para cotizaciones más claras.
+                        </p>
+                    </div>
+                </div>
 
             </div>
         </div>

@@ -2,33 +2,36 @@
 
 namespace App\Http\Requests;
 
-use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-
-            'email' => [
+            'name'      => ['required','string','max:255'],
+            'email'     => [
                 'required',
                 'string',
                 'lowercase',
                 'email',
                 'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
+                Rule::unique('users', 'email')->ignore($this->user()->id),
             ],
 
-            // 👇 NUEVO
-            'empresa' => ['nullable', 'string', 'max:255'],
+            // ✅ Campos para cotización
+            'empresa'   => ['nullable','string','max:255'],
+            'pais'      => ['nullable','string','max:100'],
+            'ciudad'    => ['nullable','string','max:120'],
+            'direccion' => ['nullable','string','max:255'],
+            'telefono'  => ['nullable','string','max:40'],
+            'nit'       => ['nullable','string','max:60'],
         ];
     }
 }

@@ -30,6 +30,12 @@ class ClienteController extends Controller
             'empresa'  => 'nullable|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
+            'pais'      => 'nullable|string|max:100',
+'ciudad'    => 'nullable|string|max:120',
+'direccion' => 'nullable|string|max:255',
+'telefono'  => 'nullable|string|max:40',
+'nit'       => 'nullable|string|max:60',
+
         ]);
 
         User::create([
@@ -38,6 +44,12 @@ class ClienteController extends Controller
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'role'     => 'cliente',
+            'pais'      => $request->pais,
+'ciudad'    => $request->ciudad,
+'direccion' => $request->direccion,
+'telefono'  => $request->telefono,
+'nit'       => $request->nit,
+
         ]);
 
         return redirect()
@@ -61,12 +73,24 @@ class ClienteController extends Controller
             'empresa' => 'nullable|string|max:255',
             'email'   => 'required|email|unique:users,email,' . $cliente->id,
             'password'=> 'nullable|min:6',
+            'pais'      => 'nullable|string|max:100',
+'ciudad'    => 'nullable|string|max:120',
+'direccion' => 'nullable|string|max:255',
+'telefono'  => 'nullable|string|max:40',
+'nit'       => 'nullable|string|max:60',
+
         ]);
 
         $data = [
             'name'    => $request->name,
             'empresa' => $request->empresa,
             'email'   => $request->email,
+            'pais'      => $request->pais,
+'ciudad'    => $request->ciudad,
+'direccion' => $request->direccion,
+'telefono'  => $request->telefono,
+'nit'       => $request->nit,
+
         ];
 
         if ($request->filled('password')) {
