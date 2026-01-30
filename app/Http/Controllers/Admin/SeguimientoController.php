@@ -4,22 +4,43 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+
 use App\Models\Venta;
 use App\Models\Seguimiento;
 use App\Models\Proveedor;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Contenedor;
 use App\Models\SeguimientoEvento;
 
 class SeguimientoController extends Controller
 {
-    private function validarAdmin()
+ private function validarAdmin()
     {
         $u = Auth::user();
         if (!$u) abort(403, 'Debes iniciar sesión.');
         if (($u->role ?? null) !== 'admin') abort(403, 'Acceso solo para administradores.');
         return $u;
+    }
+
+    // ✅ Catálogo Incoterms (pro + explicación)
+    private function incoterms(): array
+    {
+        return [
+            'EXW' => [
+                'label' => 'Ex Works (En fábrica)',
+                'desc'  => 'El vendedor entrega en su bodega/fábrica. El comprador asume transporte, exportación, flete, seguro e importación.',
+            ],
+            'FOB' => [
+                'label' => 'Free On Board (A bordo)',
+                'desc'  => 'El vendedor entrega la carga en el puerto de salida (a bordo). Desde ahí, el riesgo/costo principal es del comprador.',
+            ],
+            'CIF' => [
+                'label' => 'Cost, Insurance & Freight',
+                'desc'  => 'El vendedor paga costo + flete + seguro hasta puerto destino. Aduana e inland suelen ser del comprador.',
+            ],
+        ];
     }
 
     public function index(Request $request)
@@ -28,6 +49,9 @@ class SeguimientoController extends Controller
 
         $q = trim((string) $request->get('q', ''));
         $estado = $request->get('estado');
+        $tipo_envio = $request->get('tipo_envio');
+        $incoterm = $request->get('incoterm');
+        $eta_vencida = $request->boolean('eta_vencida', false);
 
         $seguimientos = Seguimiento::with(['venta.usuario', 'proveedor'])
             ->when($q, function($query) use ($q){
@@ -41,43 +65,49 @@ class SeguimientoController extends Controller
                 });
             })
             ->when($estado, fn($query) => $query->where('estado', $estado))
+            ->when($tipo_envio, fn($query) => $query->where('tipo_envio', $tipo_envio))
+            ->when($incoterm, fn($query) => $query->where('incoterm', $incoterm))
+            ->when($eta_vencida, function($query){
+                $query->whereNotNull('eta')->whereDate('eta', '<', now()->startOfDay());
+            })
             ->latest()
             ->paginate(12)
             ->withQueryString();
 
         $estados = $this->estados();
+        $incoterms = $this->incoterms();
 
-        return view('admin.seguimientos.index', compact('seguimientos', 'q', 'estado', 'estados'));
+        return view('admin.seguimientos.index', compact(
+            'seguimientos','q','estado','estados','tipo_envio','incoterm','eta_vencida','incoterms'
+        ));
     }
 
-    // Crear/abrir seguimiento desde una venta
     public function createFromVenta(Venta $venta)
     {
         $this->validarAdmin();
-
         $venta->load(['usuario', 'seguimiento']);
 
-        // Si ya existe, redirecciona al show
         if ($venta->seguimiento) {
             return redirect()->route('admin.seguimientos.show', $venta->seguimiento->id);
         }
 
         $proveedores = Proveedor::orderBy('nombre')->get();
         $estados = $this->estados();
+        $incoterms = $this->incoterms();
 
-        return view('admin.seguimientos.create', compact('venta', 'proveedores', 'estados'));
+        return view('admin.seguimientos.create', compact('venta', 'proveedores', 'estados', 'incoterms'));
     }
 
     public function storeFromVenta(Request $request, Venta $venta)
     {
         $this->validarAdmin();
 
-        // Evitar duplicado
         if ($venta->seguimiento()->exists()) {
             return redirect()->route('admin.seguimientos.show', $venta->seguimiento->id)
                 ->with('success', 'Este seguimiento ya existía.');
         }
 
+        // Validación base
         $data = $request->validate([
             'proveedor_id' => 'nullable|exists:proveedores,id',
             'pais_destino' => 'nullable|string|max:120',
@@ -85,15 +115,60 @@ class SeguimientoController extends Controller
             'incoterm' => 'nullable|string|max:50',
             'estado' => 'required|string|max:50',
             'etd' => 'nullable|date',
-            'eta' => 'nullable|date',
+            'eta' => 'nullable|date|after_or_equal:etd',
             'observaciones' => 'nullable|string|max:5000',
+
+            // AÉREO
+            'awb' => 'nullable|string|max:60',
+            'aerolinea' => 'nullable|string|max:120',
+            'aeropuerto_salida' => 'nullable|string|max:120',
+            'aeropuerto_llegada' => 'nullable|string|max:120',
+            'vuelo' => 'nullable|string|max:60',
+            'tracking_url' => 'nullable|string|max:500',
         ]);
+
+        // ✅ Incoterm detalles (json)
+        $incotermDetalles = $request->input('incoterm_detalles', []);
+        if (!is_array($incotermDetalles)) $incotermDetalles = [];
+        $data['incoterm_detalles'] = $incotermDetalles;
+
+        // ✅ Reglas condicionales por Incoterm (para que sea “ERP real”)
+        if (($data['incoterm'] ?? null) === 'EXW') {
+            if (empty($incotermDetalles['lugar_retiro'] ?? null)) {
+                return back()->withInput()->withErrors([
+                    'incoterm_detalles.lugar_retiro' => 'En EXW es obligatorio indicar el lugar de retiro.',
+                ]);
+            }
+        }
+        if (($data['incoterm'] ?? null) === 'FOB') {
+            if (empty($incotermDetalles['puerto_carga'] ?? null)) {
+                return back()->withInput()->withErrors([
+                    'incoterm_detalles.puerto_carga' => 'En FOB es obligatorio indicar el puerto de carga.',
+                ]);
+            }
+        }
+        if (($data['incoterm'] ?? null) === 'CIF') {
+            if (empty($incotermDetalles['puerto_destino'] ?? null)) {
+                return back()->withInput()->withErrors([
+                    'incoterm_detalles.puerto_destino' => 'En CIF es obligatorio indicar el puerto de destino.',
+                ]);
+            }
+        }
+
+        // ✅ Si es marítimo, limpia campos aéreos; si es aéreo, se permiten
+        if (($data['tipo_envio'] ?? null) === 'maritimo') {
+            $data['awb'] = null;
+            $data['aerolinea'] = null;
+            $data['aeropuerto_salida'] = null;
+            $data['aeropuerto_llegada'] = null;
+            $data['vuelo'] = null;
+            $data['tracking_url'] = null;
+        }
 
         $data['venta_id'] = $venta->id;
 
         $seguimiento = Seguimiento::create($data);
 
-        // Evento automático inicial (PRO)
         SeguimientoEvento::create([
             'seguimiento_id' => $seguimiento->id,
             'creado_por' => Auth::id(),
@@ -121,9 +196,10 @@ class SeguimientoController extends Controller
         $proveedores = Proveedor::orderBy('nombre')->get();
         $estados = $this->estados();
         $estadosContenedor = $this->estadosContenedor();
+        $incoterms = $this->incoterms();
 
         return view('admin.seguimientos.show', compact(
-            'seguimiento', 'proveedores', 'estados', 'estadosContenedor'
+            'seguimiento','proveedores','estados','estadosContenedor','incoterms'
         ));
     }
 
@@ -138,12 +214,49 @@ class SeguimientoController extends Controller
             'incoterm' => 'nullable|string|max:50',
             'estado' => 'required|string|max:50',
             'etd' => 'nullable|date',
-            'eta' => 'nullable|date',
+            'eta' => 'nullable|date|after_or_equal:etd',
             'observaciones' => 'nullable|string|max:5000',
+
+            // AÉREO
+            'awb' => 'nullable|string|max:60',
+            'aerolinea' => 'nullable|string|max:120',
+            'aeropuerto_salida' => 'nullable|string|max:120',
+            'aeropuerto_llegada' => 'nullable|string|max:120',
+            'vuelo' => 'nullable|string|max:60',
+            'tracking_url' => 'nullable|string|max:500',
         ]);
 
-        $cambioEstado = $seguimiento->estado !== $data['estado'];
+        $incotermDetalles = $request->input('incoterm_detalles', []);
+        if (!is_array($incotermDetalles)) $incotermDetalles = [];
+        $data['incoterm_detalles'] = $incotermDetalles;
 
+        // Condicional incoterm
+        if (($data['incoterm'] ?? null) === 'EXW' && empty($incotermDetalles['lugar_retiro'] ?? null)) {
+            return back()->withInput()->withErrors([
+                'incoterm_detalles.lugar_retiro' => 'En EXW es obligatorio indicar el lugar de retiro.',
+            ]);
+        }
+        if (($data['incoterm'] ?? null) === 'FOB' && empty($incotermDetalles['puerto_carga'] ?? null)) {
+            return back()->withInput()->withErrors([
+                'incoterm_detalles.puerto_carga' => 'En FOB es obligatorio indicar el puerto de carga.',
+            ]);
+        }
+        if (($data['incoterm'] ?? null) === 'CIF' && empty($incotermDetalles['puerto_destino'] ?? null)) {
+            return back()->withInput()->withErrors([
+                'incoterm_detalles.puerto_destino' => 'En CIF es obligatorio indicar el puerto de destino.',
+            ]);
+        }
+
+        if (($data['tipo_envio'] ?? null) === 'maritimo') {
+            $data['awb'] = null;
+            $data['aerolinea'] = null;
+            $data['aeropuerto_salida'] = null;
+            $data['aeropuerto_llegada'] = null;
+            $data['vuelo'] = null;
+            $data['tracking_url'] = null;
+        }
+
+        $cambioEstado = $seguimiento->estado !== $data['estado'];
         $seguimiento->update($data);
 
         if ($cambioEstado) {
@@ -152,7 +265,7 @@ class SeguimientoController extends Controller
                 'creado_por' => Auth::id(),
                 'tipo' => 'general',
                 'titulo' => 'Cambio de estado',
-                'descripcion' => 'Nuevo estado: ' . $data['estado'],
+                'descripcion' => 'Nuevo estado: ' . ($this->estados()[$data['estado']] ?? $data['estado']),
                 'fecha_evento' => now(),
             ]);
         }
@@ -164,6 +277,10 @@ class SeguimientoController extends Controller
     public function contenedorStore(Request $request, Seguimiento $seguimiento)
     {
         $this->validarAdmin();
+
+        if (($seguimiento->tipo_envio ?? null) !== 'maritimo') {
+            return back()->with('error', 'Este seguimiento es AÉREO. No aplica contenedores.');
+        }
 
         $data = $request->validate([
             'numero_contenedor' => 'nullable|string|max:50',
@@ -190,6 +307,45 @@ class SeguimientoController extends Controller
         ]);
 
         return back()->with('success', 'Contenedor agregado.');
+    }
+
+    public function contenedorUpdate(Request $request, Seguimiento $seguimiento, Contenedor $contenedor)
+    {
+        $this->validarAdmin();
+        if ($contenedor->seguimiento_id !== $seguimiento->id) abort(403);
+
+        if (($seguimiento->tipo_envio ?? null) !== 'maritimo') {
+            return back()->with('error', 'Este seguimiento es AÉREO. No aplica contenedores.');
+        }
+
+        $data = $request->validate([
+            'numero_contenedor' => 'nullable|string|max:50',
+            'bl' => 'nullable|string|max:80',
+            'naviera' => 'nullable|string|max:120',
+            'puerto_salida' => 'nullable|string|max:120',
+            'puerto_llegada' => 'nullable|string|max:120',
+            'etd' => 'nullable|date',
+            'eta' => 'nullable|date',
+            'estado' => 'required|string|max:50',
+        ]);
+
+        $cambioEstado = ($contenedor->estado ?? null) !== $data['estado'];
+        $contenedor->update($data);
+
+        if ($cambioEstado) {
+            $label = $this->estadosContenedor()[$data['estado']] ?? $data['estado'];
+
+            SeguimientoEvento::create([
+                'seguimiento_id' => $seguimiento->id,
+                'creado_por' => Auth::id(),
+                'tipo' => 'embarque',
+                'titulo' => 'Estado de contenedor actualizado',
+                'descripcion' => 'Contenedor ' . ($contenedor->numero_contenedor ?? ('#'.$contenedor->id)) . ' → ' . $label,
+                'fecha_evento' => now(),
+            ]);
+        }
+
+        return back()->with('success', 'Contenedor actualizado.');
     }
 
     public function contenedorDestroy(Seguimiento $seguimiento, Contenedor $contenedor)
@@ -248,22 +404,21 @@ class SeguimientoController extends Controller
     }
 
     // -------- Helpers --------
-  private function estados(): array
-{
-    return [
-        'ordencompra'      => 'Compra confirmada',
-        'produccion'       => 'En fabricación',
-        'listoparaembarque'=> 'Listo para despachar',
-        'embarcado'        => 'Despachado / Embarcado',
-        'entransito'       => 'En camino (Tránsito)',
-        'arriboapuerto'    => 'Llegó al puerto',
-        'aduana'           => 'En revisión de aduana',
-        'liberado'         => 'Liberado (listo para entrega)',
-        'entregado'        => 'Entregado al cliente',
-        'cerrado'          => 'Caso cerrado',
-    ];
-}
-
+    private function estados(): array
+    {
+        return [
+            'ordencompra'       => 'Compra confirmada',
+            'produccion'        => 'En fabricación',
+            'listoparaembarque' => 'Listo para despachar',
+            'embarcado'         => 'Despachado / Embarcado',
+            'entransito'        => 'En camino (Tránsito)',
+            'arriboapuerto'     => 'Llegó al puerto',
+            'aduana'            => 'En revisión de aduana',
+            'liberado'          => 'Liberado (listo para entrega)',
+            'entregado'         => 'Entregado al cliente',
+            'cerrado'           => 'Caso cerrado',
+        ];
+    }
 
     private function estadosContenedor(): array
     {
@@ -278,43 +433,4 @@ class SeguimientoController extends Controller
             'entregado' => 'Entregado',
         ];
     }
-
-
-    public function contenedorUpdate(Request $request, Seguimiento $seguimiento, Contenedor $contenedor)
-{
-    $this->validarAdmin();
-    if ($contenedor->seguimiento_id !== $seguimiento->id) abort(403);
-
-    $data = $request->validate([
-        'numero_contenedor' => 'nullable|string|max:50',
-        'bl' => 'nullable|string|max:80',
-        'naviera' => 'nullable|string|max:120',
-        'puerto_salida' => 'nullable|string|max:120',
-        'puerto_llegada' => 'nullable|string|max:120',
-        'etd' => 'nullable|date',
-        'eta' => 'nullable|date',
-        'estado' => 'required|string|max:50',
-    ]);
-
-    $cambioEstado = ($contenedor->estado ?? null) !== $data['estado'];
-
-    $contenedor->update($data);
-
-    // Evento PRO si cambió el estado del contenedor
-    if ($cambioEstado) {
-        $label = $this->estadosContenedor()[$data['estado']] ?? $data['estado'];
-
-        SeguimientoEvento::create([
-            'seguimiento_id' => $seguimiento->id,
-            'creado_por' => Auth::id(),
-            'tipo' => 'embarque',
-            'titulo' => 'Estado de contenedor actualizado',
-            'descripcion' => 'Contenedor ' . ($contenedor->numero_contenedor ?? ('#'.$contenedor->id)) . ' → ' . $label,
-            'fecha_evento' => now(),
-        ]);
-    }
-
-    return back()->with('success', 'Contenedor actualizado.');
-}
-
 }

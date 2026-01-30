@@ -6,18 +6,39 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Seguimiento extends Model
 {
-   use HasFactory;
+    use HasFactory;
 
     protected $table = 'seguimientos';
 
     protected $fillable = [
-        'venta_id','proveedor_id','pais_destino','tipo_envio','incoterm',
-        'estado','etd','eta','observaciones'
+        'venta_id',
+        'proveedor_id',
+        'pais_destino',
+        'tipo_envio',
+
+        // AÉREO
+        'awb',
+        'aerolinea',
+        'aeropuerto_salida',
+        'aeropuerto_llegada',
+        'vuelo',
+        'tracking_url',
+
+        // Incoterm
+        'incoterm',
+        'incoterm_detalles',
+
+        // Estado / fechas / notas
+        'estado',
+        'etd',
+        'eta',
+        'observaciones',
     ];
 
     protected $casts = [
         'etd' => 'date',
         'eta' => 'date',
+        'incoterm_detalles' => 'array',
     ];
 
     public function venta()
@@ -39,4 +60,5 @@ class Seguimiento extends Model
     {
         return $this->hasMany(SeguimientoEvento::class, 'seguimiento_id')->latest('fecha_evento');
     }
+
 }

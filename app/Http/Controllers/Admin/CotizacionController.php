@@ -341,6 +341,4 @@ public function enviarPorCorreo(Cotizacion $cotizacion)
     return back()->with('success', 'Cotización enviada por correo correctamente.');
 }
 
-
-
 }
