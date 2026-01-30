@@ -68,6 +68,11 @@ Route::prefix('admin')->as('admin.')->group(function () {
     Route::delete('cotizaciones/{cotizacion}/items/{item}/opciones/{op}', [CotizacionController::class, 'eliminarOpcionItem'])
         ->name('cotizaciones.items.opciones.destroy');
 
+
+    Route::patch('cotizaciones/{cotizacion}/cancelar', [CotizacionController::class, 'cancelar'])
+    ->name('cotizaciones.cancelar');
+
+
         Route::resource('clientes', ClienteController::class);
 
 
