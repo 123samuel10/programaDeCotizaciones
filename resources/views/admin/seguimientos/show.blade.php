@@ -632,13 +632,14 @@
 
                     {{-- Contenedores (solo maritimo) --}}
       {{-- Contenedores (marítimo + permitido por Incoterm) --}}
+{{-- Contenedores (marítimo + permitido por Incoterm) --}}
 <div class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
     <div class="p-6 border-b border-gray-100 dark:border-gray-700">
         <div class="flex items-start justify-between gap-3">
             <div>
                 <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Contenedores</div>
                 <div class="text-sm text-gray-500 dark:text-gray-400">
-                    Aplica solo si el envío es marítimo y el Incoterm lo permite.
+                    Solo aplica si el envío es marítimo y el Incoterm lo permite (FOB/CIF).
                 </div>
             </div>
 
@@ -646,10 +647,10 @@
                 $badge = 'bg-gray-100 text-gray-700 ring-gray-200 dark:bg-gray-900/40 dark:text-gray-200 dark:ring-gray-700';
                 $badgeText = 'NO APLICA';
 
-                if ($tipoEnvio === 'maritimo' && $permiteContenedores) {
+                if (($seguimiento->tipo_envio ?? 'maritimo') === 'maritimo' && $permiteContenedores) {
                     $badge = 'bg-green-50 text-green-700 ring-green-100 dark:bg-green-500/10 dark:text-green-200 dark:ring-green-500/20';
                     $badgeText = 'HABILITADO';
-                } elseif ($tipoEnvio === 'maritimo' && !$permiteContenedores) {
+                } elseif (($seguimiento->tipo_envio ?? 'maritimo') === 'maritimo' && !$permiteContenedores) {
                     $badge = 'bg-yellow-50 text-yellow-800 ring-yellow-100 dark:bg-yellow-500/10 dark:text-yellow-200 dark:ring-yellow-500/20';
                     $badgeText = 'RESTRINGIDO';
                 }
@@ -662,7 +663,7 @@
     </div>
 
     {{-- CASO 1: AÉREO --}}
-    @if($tipoEnvio !== 'maritimo')
+    @if(($seguimiento->tipo_envio ?? 'maritimo') !== 'maritimo')
         <div class="p-6">
             <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
                 Este seguimiento es <b>AÉREO</b>. No se usan contenedores.
@@ -676,7 +677,7 @@
                 <div class="font-extrabold">Contenedores deshabilitados para este Incoterm</div>
                 <div class="mt-1">
                     Incoterm actual: <b>{{ $seguimiento->incoterm ?? '—' }}</b>.
-                    Ajusta el Incoterm en “Actualizar seguimiento” si necesitas gestionar contenedores.
+                    Si necesitas contenedores, cambia el Incoterm a <b>FOB</b> o <b>CIF</b>.
                 </div>
             </div>
         </div>
@@ -754,11 +755,124 @@
                         Aún no hay contenedores asociados.
                     </div>
                 @else
-                    {{-- ✅ AQUÍ VA TU LISTA ACTUAL (NO LA CAMBIES) --}}
                     <div class="space-y-3">
                         @foreach($contenedores as $c)
-                            {{-- pega aquí exactamente tu bloque actual de cada contenedor --}}
-                            {{-- (desde <div x-data="{ open:false }" ...> hasta el cierre) --}}
+                            @php
+                                $estadoLabel = $estadosContenedor[$c->estado] ?? ($c->estado ?? '—');
+
+                                $pill = 'bg-gray-100 text-gray-800 dark:bg-gray-900/40 dark:text-gray-100';
+                                if (in_array($c->estado, ['liberado','entregado'])) $pill = 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-200';
+                                elseif (in_array($c->estado, ['aduana','arribado'])) $pill = 'bg-yellow-50 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-200';
+                                elseif (in_array($c->estado, ['embarcado','entransito'])) $pill = 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200';
+                            @endphp
+
+                            <div x-data="{ open:false }" class="rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+                                <div class="p-4">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <div class="font-extrabold text-gray-900 dark:text-gray-100 truncate">
+                                                {{ $c->numero_contenedor ?? ('Contenedor #'.$c->id) }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 space-y-1">
+                                                <div>BL: <span class="font-bold">{{ $c->bl ?? '—' }}</span> · Naviera: <span class="font-bold">{{ $c->naviera ?? '—' }}</span></div>
+                                                <div>Ruta: <span class="font-bold">{{ $c->puerto_salida ?? '—' }}</span> → <span class="font-bold">{{ $c->puerto_llegada ?? '—' }}</span></div>
+                                                <div>ETD: <span class="font-bold">{{ optional($c->etd)->format('d/m/Y') ?? '—' }}</span> · ETA: <span class="font-bold">{{ optional($c->eta)->format('d/m/Y') ?? '—' }}</span></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-right shrink-0">
+                                            <span class="inline-flex px-3 py-1 rounded-full text-xs font-extrabold {{ $pill }}">
+                                                {{ strtoupper($estadoLabel) }}
+                                            </span>
+
+                                            <div class="mt-2 flex items-center justify-end gap-2">
+                                                <button type="button"
+                                                        @click="open = !open"
+                                                        class="text-xs font-extrabold text-blue-600 hover:text-blue-700 dark:text-blue-300">
+                                                    {{ __('Editar') }}
+                                                </button>
+
+                                                <button type="button"
+                                                        @click="$dispatch('open-delete-contenedor', { id: '{{ $c->id }}' })"
+                                                        class="text-xs font-extrabold text-red-600 hover:text-red-700 dark:text-red-300">
+                                                    Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Panel editar --}}
+                                <div x-cloak x-show="open" class="border-t border-gray-100 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                                    <form method="POST" action="{{ route('admin.seguimientos.contenedores.update', [$seguimiento->id, $c->id]) }}" class="space-y-3">
+                                        @csrf
+                                        @method('PUT')
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Número contenedor</label>
+                                                <input name="numero_contenedor" value="{{ old('numero_contenedor', $c->numero_contenedor) }}"
+                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">BL</label>
+                                                <input name="bl" value="{{ old('bl', $c->bl) }}"
+                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Naviera</label>
+                                                <input name="naviera" value="{{ old('naviera', $c->naviera) }}"
+                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Estado</label>
+                                                <select name="estado"
+                                                        class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                                    @foreach($estadosContenedor as $k => $label)
+                                                        <option value="{{ $k }}" {{ old('estado', $c->estado) === $k ? 'selected' : '' }}>{{ $label }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto salida</label>
+                                                <input name="puerto_salida" value="{{ old('puerto_salida', $c->puerto_salida) }}"
+                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Puerto llegada</label>
+                                                <input name="puerto_llegada" value="{{ old('puerto_llegada', $c->puerto_llegada) }}"
+                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">ETD</label>
+                                                <input type="date" name="etd" value="{{ old('etd', optional($c->etd)->format('Y-m-d')) }}"
+                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">ETA</label>
+                                                <input type="date" name="eta" value="{{ old('eta', optional($c->eta)->format('Y-m-d')) }}"
+                                                       class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
+                                            </div>
+                                        </div>
+
+                                        <div class="flex justify-end gap-2">
+                                            <button type="button" @click="open=false"
+                                                    class="px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-900 font-extrabold
+                                                           dark:bg-gray-700/60 dark:hover:bg-gray-700 dark:text-gray-100">
+                                                Cerrar
+                                            </button>
+
+                                            <button class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
+                                                Guardar
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         @endforeach
                     </div>
                 @endif
@@ -768,146 +882,6 @@
     @endif
 </div>
 
-
-                    {{-- Eventos / Bitácora --}}
-                    <div class="rounded-2xl border border-gray-100 bg-white dark:bg-gray-800 dark:border-gray-700 overflow-hidden">
-                        <div class="p-6 border-b border-gray-100 dark:border-gray-700">
-                            <div class="text-lg font-extrabold text-gray-900 dark:text-gray-100">Bitácora</div>
-                            <div class="text-sm text-gray-500 dark:text-gray-400">
-                                Eventos del seguimiento (comentarios, documentos, hitos).
-                            </div>
-                        </div>
-
-                        <div class="p-6 space-y-5">
-
-                            {{-- Crear evento --}}
-                            <form method="POST" action="{{ route('admin.seguimientos.eventos.store', $seguimiento->id) }}"
-                                  enctype="multipart/form-data"
-                                  class="space-y-4">
-                                {{-- Rutas sugeridas:
-                                     Route::post('/admin/seguimientos/{seguimiento}/eventos', [SeguimientoController::class,'eventoStore'])->name('admin.seguimientos.eventos.store');
-                                     Route::delete('/admin/seguimientos/{seguimiento}/eventos/{evento}', [SeguimientoController::class,'eventoDestroy'])->name('admin.seguimientos.eventos.destroy');
-                                 --}}
-                                @csrf
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Tipo</label>
-                                        <select name="tipo"
-                                                class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                            <option value="general" {{ old('tipo','general') === 'general' ? 'selected' : '' }}>General</option>
-                                            <option value="embarque" {{ old('tipo') === 'embarque' ? 'selected' : '' }}>Embarque</option>
-                                            <option value="aduana" {{ old('tipo') === 'aduana' ? 'selected' : '' }}>Aduana</option>
-                                            <option value="documento" {{ old('tipo') === 'documento' ? 'selected' : '' }}>Documento</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Fecha (opcional)</label>
-                                        <input type="date" name="fecha_evento" value="{{ old('fecha_evento') }}"
-                                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                    </div>
-
-                                    <div class="md:col-span-2">
-                                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Título</label>
-                                        <input name="titulo" value="{{ old('titulo') }}" placeholder="Ej: Documentos de aduana enviados"
-                                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100">
-                                    </div>
-
-                                    <div class="md:col-span-2">
-                                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">Descripción (opcional)</label>
-                                        <textarea name="descripcion" rows="3"
-                                                  class="w-full rounded-2xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 p-4"
-                                                  placeholder="Detalles...">{{ old('descripcion') }}</textarea>
-                                    </div>
-
-                                    <div class="md:col-span-2">
-                                        <label class="block text-xs font-bold text-gray-600 dark:text-gray-300 mb-1">
-                                            Archivo (opcional) <span class="font-normal text-gray-500">pdf/jpg/png/webp (max 5MB)</span>
-                                        </label>
-                                        <input type="file" name="archivo"
-                                               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 p-2">
-                                    </div>
-                                </div>
-
-                                <button class="w-full px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold">
-                                    + Agregar evento
-                                </button>
-                            </form>
-
-                            {{-- Listado de eventos --}}
-                            <div class="pt-2">
-                                <div class="text-sm font-extrabold text-gray-900 dark:text-gray-100 mb-3">
-                                    Historial ({{ $eventos->count() }})
-                                </div>
-
-                                @if($eventos->isEmpty())
-                                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900/40 dark:text-gray-200">
-                                        Aún no hay eventos.
-                                    </div>
-                                @else
-                                    <div class="space-y-3">
-                                        @foreach($eventos as $ev)
-                                            @php
-                                                $tipoPill = 'bg-gray-100 text-gray-900 dark:bg-gray-900/40 dark:text-gray-100';
-                                                if (($ev->tipo ?? '') === 'aduana') $tipoPill = 'bg-yellow-50 text-yellow-800 dark:bg-yellow-500/10 dark:text-yellow-200';
-                                                if (($ev->tipo ?? '') === 'embarque') $tipoPill = 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-200';
-                                                if (($ev->tipo ?? '') === 'documento') $tipoPill = 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-200';
-                                            @endphp
-
-                                            <div class="rounded-2xl border border-gray-100 dark:border-gray-700 p-4">
-                                                <div class="flex items-start justify-between gap-3">
-                                                    <div>
-                                                        <div class="font-extrabold text-gray-900 dark:text-gray-100">
-                                                            {{ $ev->titulo }}
-                                                        </div>
-                                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                            {{ optional($ev->fecha_evento)->format('d/m/Y H:i') ?? '—' }}
-                                                            @if(!empty($ev->creador?->name)) · Por: {{ $ev->creador->name }} @endif
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="text-right">
-                                                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-extrabold {{ $tipoPill }}">
-                                                            {{ strtoupper($ev->tipo ?? 'general') }}
-                                                        </span>
-
-                                                        <button type="button"
-                                                                @click="$dispatch('open-delete-evento', { id: '{{ $ev->id }}' })"
-                                                                class="mt-2 block text-xs font-extrabold text-red-600 hover:text-red-700 dark:text-red-300">
-                                                            Eliminar
-                                                        </button>
-                                                    </div>
-                                                </div>
-
-                                                @if(!empty($ev->descripcion))
-                                                    <div class="mt-3 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-line">
-                                                        {{ $ev->descripcion }}
-                                                    </div>
-                                                @endif
-
-                                                @if(!empty($ev->archivo))
-                                                    <div class="mt-4">
-                                                        <a href="{{ asset('storage/'.$ev->archivo) }}" target="_blank"
-                                                           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white font-extrabold hover:bg-gray-800
-                                                                  dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100">
-                                                            Ver archivo
-                                                        </a>
-                                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                                            {{ basename($ev->archivo) }}
-                                                        </div>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
             </div>
 
             {{-- ==========================

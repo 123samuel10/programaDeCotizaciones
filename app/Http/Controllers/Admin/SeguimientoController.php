@@ -458,16 +458,6 @@ if (!$this->permiteContenedoresPara($seguimiento)) {
         ];
     }
 
-//     private function permiteContenedoresPara(Seguimiento $seguimiento): bool
-// {
-//     if (($seguimiento->tipo_envio ?? null) !== 'maritimo') return false;
-
-//     $incoterm = $seguimiento->incoterm ?? null;
-//     if (!$incoterm) return false; // si no hay incoterm, por seguridad no mostramos
-
-//     $incoterms = $this->incoterms();
-//     return (bool) ($incoterms[$incoterm]['permite_contenedores'] ?? false);
-// }
 private function permiteContenedoresPara(Seguimiento $seguimiento): bool
 {
     if (($seguimiento->tipo_envio ?? null) !== 'maritimo') return false;
